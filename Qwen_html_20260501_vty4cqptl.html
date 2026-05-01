@@ -1,0 +1,762 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>ООО «Нейт» — Облачная касса партнёров</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+    <style>
+        :root {
+            --bg-primary: #0B0E16;
+            --bg-secondary: #13151F;
+            --bg-tertiary: #181B26;
+            --text-primary: #F0F0FF;
+            --text-secondary: #A0A0C0;
+            --accent-purple: #9B59B6;
+            --accent-pink: #E879A8;
+            --accent-green: #2ED15E;
+            --accent-red: #FF7777;
+            --accent-blue: #6BCBFF;
+            --border-color: rgba(255,255,255,0.08);
+            --shadow-soft: 0 4px 20px rgba(0,0,0,0.3);
+            --transition: all 0.25s ease;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background: var(--bg-primary);
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            color: var(--text-primary);
+            padding-bottom: 2rem;
+            line-height: 1.5;
+        }
+        .container { max-width: 1320px; margin: 0 auto; padding: 0 1.2rem; }
+        
+        .nav-custom {
+            background: rgba(8, 10, 18, 0.96);
+            backdrop-filter: blur(16px);
+            border-bottom: 1px solid var(--border-color);
+            padding: 0.7rem 0;
+            position: sticky; top: 0; z-index: 100;
+            display: flex; justify-content: space-between; align-items: center;
+            flex-wrap: wrap; gap: 0.5rem;
+        }
+        .logo-box {
+            width: 44px; height: 44px;
+            background: linear-gradient(135deg, var(--accent-purple), var(--accent-pink));
+            border-radius: 14px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.4rem; margin-right: 0.8rem;
+            box-shadow: 0 4px 12px rgba(155,89,182,0.3);
+        }
+        .brand-title { font-size: 1.1rem; font-weight: 700; }
+        .brand-sub { font-size: 0.75rem; color: var(--text-secondary); }
+        
+        .btn-sm-custom {
+            border: 1px solid var(--border-color);
+            background: rgba(255,255,255,0.03);
+            color: var(--text-primary);
+            font-size: 0.75rem; padding: 0.35rem 0.9rem;
+            border-radius: 2rem; transition: var(--transition);
+            cursor: pointer; display: inline-flex; align-items: center; gap: 6px;
+        }
+        .btn-sm-custom:hover { background: rgba(255,255,255,0.12); transform: translateY(-1px); }
+        .btn-sm-custom:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+        .btn-edit-only { display: none; }
+        body.guest-mode .btn-edit-only { display: none !important; }
+        body.auth-mode .btn-edit-only { display: inline-flex !important; }
+        
+        .stats-row {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+            gap: 1rem; margin: 1.5rem 0;
+        }
+        .stat-box {
+            background: var(--bg-secondary); border: 1px solid var(--border-color);
+            border-radius: 1.2rem; padding: 1rem 0.8rem; text-align: center;
+            transition: var(--transition);
+        }
+        .stat-box:hover { transform: translateY(-3px); background: var(--bg-tertiary); }
+        .stat-box .label {
+            font-size: 0.7rem; text-transform: uppercase; letter-spacing: 1.2px;
+            color: var(--text-secondary); font-weight: 700;
+        }
+        .stat-box .value { font-size: 1.45rem; font-weight: 800; margin-top: 0.3rem; }
+        
+        .partner-card {
+            background: var(--bg-secondary); border: 1px solid var(--border-color);
+            border-radius: 1.3rem; overflow: hidden; transition: var(--transition);
+            height: 100%; display: flex; flex-direction: column;
+        }
+        .partner-card:hover { transform: translateY(-5px); border-color: rgba(155,89,182,0.4); }
+        .partner-card .card-header {
+            padding: 1rem 1.2rem; background: rgba(255,255,255,0.02);
+            border-bottom: 1px solid var(--border-color);
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .avatar {
+            width: 42px; height: 42px; border-radius: 50%; margin-right: 0.75rem;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.3rem; flex-shrink: 0;
+        }
+        .partner-nastya .avatar { background: linear-gradient(145deg, var(--accent-pink), var(--accent-purple)); }
+        .partner-natalia .avatar { background: #2D2F42; border: 1px solid #5A5C7A; }
+        .partner-name { font-weight: 600; font-size: 0.95rem; }
+        .partner-surname { color: var(--text-secondary); font-size: 0.8rem; margin-left: 4px; }
+        .share-badge {
+            background: rgba(155,89,182,0.2); border-radius: 2rem;
+            padding: 0.2rem 0.7rem; font-size: 0.75rem; font-weight: 800; color: #D0B0FF;
+        }
+        .metric-row {
+            display: flex; justify-content: space-between; padding: 0.6rem 0;
+            border-bottom: 1px solid rgba(255,255,255,0.05); font-size: 0.85rem;
+        }
+        .metric-label { color: var(--text-secondary); }
+        .metric-value { font-weight: 700; }
+        .balance-box {
+            background: rgba(0,0,0,0.25); border-radius: 1rem;
+            padding: 0.7rem; margin-top: auto; text-align: center;
+        }
+        .bal-label { font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 0.3rem; }
+        .bal-value { font-size: 1.6rem; font-weight: 800; }
+        .bal-green { color: var(--accent-green); }
+        .bal-red { color: var(--accent-red); }
+        
+        .card-section {
+            background: var(--bg-secondary); border: 1px solid var(--border-color);
+            border-radius: 1.3rem; padding: 1.3rem; margin-bottom: 1.5rem;
+        }
+        .section-title {
+            font-size: 1rem; font-weight: 700; margin-bottom: 1rem;
+            display: flex; align-items: center; gap: 8px;
+        }
+        .rec-card {
+            background: linear-gradient(115deg, rgba(155,89,182,0.12), rgba(0,184,148,0.05));
+            border-left: 4px solid var(--accent-purple); border-radius: 1rem;
+            padding: 1rem 1.2rem; margin-bottom: 1.5rem; display: none;
+        }
+        .form-label {
+            font-weight: 600; font-size: 0.7rem; color: var(--text-secondary);
+            text-transform: uppercase; margin-bottom: 0.4rem; display: block;
+        }
+        .form-control, .form-select {
+            background: #0D0F17 !important; border: 1px solid #25283B !important;
+            border-radius: 0.7rem; color: white !important; font-size: 0.85rem;
+            padding: 0.55rem 0.75rem; transition: var(--transition);
+        }
+        .form-control:focus, .form-select:focus {
+            border-color: var(--accent-purple) !important;
+            box-shadow: 0 0 0 3px rgba(155,89,182,0.2) !important;
+            outline: none;
+        }
+        .form-control:disabled { opacity: 0.6; cursor: not-allowed; }
+        .btn-add {
+            background: linear-gradient(95deg, #00B894, #00A68A); border: none;
+            font-weight: 800; padding: 0.55rem 1.4rem; border-radius: 2rem;
+            color: #001F1A; transition: var(--transition);
+        }
+        .btn-add:hover { transform: translateY(-2px); background: linear-gradient(95deg, #00CEA0, #00B894); }
+        .btn-add:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+        
+        .history-table { width: 100%; border-collapse: separate; border-spacing: 0; }
+        .history-table thead th {
+            background: #191C2A; font-size: 0.7rem; color: #C8C8F0;
+            padding: 0.9rem 0.7rem; border-bottom: 2px solid rgba(255,255,255,0.1);
+            font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;
+        }
+        .history-table tbody td {
+            background: #1B1E2C; padding: 0.75rem 0.7rem;
+            border-bottom: 1px solid rgba(255,255,255,0.05); color: var(--text-primary);
+            font-size: 0.9rem;
+        }
+        .history-table tbody tr:hover td { background: #252839; }
+        
+        .badge-income, .badge-expense, .badge-personal, .badge-salary {
+            border-radius: 0.4rem; padding: 0.2rem 0.65rem; font-weight: 700; font-size: 0.75rem;
+        }
+        .badge-income { background: #1F3A2C; color: #7BE0A0; border: 1px solid #2D6A4F; }
+        .badge-expense { background: #3D2228; color: #FFA0A0; border: 1px solid #9B2C2C; }
+        .badge-personal { background: #3D3820; color: #FFE68F; border: 1px solid #B8860B; }
+        .badge-salary { background: #1F354D; color: #B0D4FF; border: 1px solid #4C7AB3; }
+        .badge-cat {
+            background: rgba(255,255,255,0.08); color: #D0D0F0;
+            border-radius: 1rem; padding: 0.2rem 0.6rem; font-size: 0.7rem;
+        }
+        .btn-del {
+            background: none; border: none; font-size: 1.1rem; cursor: pointer;
+            color: var(--accent-red); opacity: 0.7; transition: var(--transition);
+            padding: 4px 8px; border-radius: 6px;
+        }
+        .btn-del:hover { opacity: 1; background: rgba(255,100,100,0.15); }
+        .btn-del:disabled { opacity: 0.3; cursor: not-allowed; }
+        
+        .filter-chip {
+            padding: 0.35rem 1rem; border-radius: 2rem;
+            background: rgba(255,255,255,0.04); border: 1px solid var(--border-color);
+            font-size: 0.75rem; font-weight: 600; color: var(--text-secondary);
+            cursor: pointer; transition: var(--transition);
+        }
+        .filter-chip:hover, .filter-chip.active {
+            background: var(--accent-purple); border-color: var(--accent-purple); color: white;
+        }
+        .nav-pills .nav-link {
+            background: rgba(255,255,255,0.03); border: 1px solid var(--border-color);
+            color: var(--text-primary); border-radius: 2rem; margin-right: 0.5rem;
+            font-weight: 600; font-size: 0.85rem; padding: 0.5rem 1.2rem;
+            transition: var(--transition);
+        }
+        .nav-pills .nav-link.active {
+            background: linear-gradient(95deg, var(--accent-purple), var(--accent-pink));
+            border: none; color: white;
+        }
+        
+        .chart-box {
+            background: var(--bg-secondary); border-radius: 1.2rem; padding: 1rem;
+            border: 1px solid var(--border-color); height: 100%;
+        }
+        .chart-box canvas { max-height: 280px; }
+        
+        .toast-container {
+            position: fixed; bottom: 1.5rem; right: 1.5rem; z-index: 1050;
+            display: flex; flex-direction: column; gap: 0.5rem;
+        }
+        .toast-msg {
+            background: #1C1F2E; backdrop-filter: blur(8px);
+            border: 1px solid rgba(255,255,255,0.1); border-radius: 0.8rem;
+            padding: 0.7rem 1.1rem; display: flex; gap: 10px; align-items: center;
+            font-weight: 600; font-size: 0.85rem; animation: fadeSlide 0.25s ease;
+            box-shadow: var(--shadow-soft);
+        }
+        @keyframes fadeSlide {
+            from { opacity: 0; transform: translateX(40px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+        
+        .modal-pass {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.85); backdrop-filter: blur(12px);
+            z-index: 2000; display: flex; align-items: center; justify-content: center;
+            padding: 1rem;
+        }
+        .modal-card {
+            background: var(--bg-secondary); max-width: 400px; width: 100%;
+            border-radius: 2rem; padding: 2rem 1.5rem;
+            border: 1px solid var(--accent-purple); text-align: center;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+        }
+        .modal-title { font-size: 1.4rem; font-weight: 800; margin-bottom: 0.5rem; }
+        .modal-desc { color: var(--text-secondary); margin-bottom: 1.5rem; font-size: 0.9rem; }
+        
+        /* Кнопка гостевого режима */
+        .btn-guest {
+            background: transparent; border: 1px solid var(--border-color);
+            color: var(--text-secondary); font-size: 0.85rem; padding: 0.5rem 1rem;
+            border-radius: 2rem; margin-top: 1rem; cursor: pointer;
+            transition: var(--transition); width: 100%; text-align: center;
+        }
+        .btn-guest:hover {
+            background: rgba(255,255,255,0.05); color: var(--text-primary);
+            border-color: var(--text-secondary);
+        }
+        
+        .db-warning {
+            background: rgba(255,119,119,0.1); color: #FFB0B0;
+            border: 1px solid rgba(255,119,119,0.3); border-radius: 0.8rem;
+            padding: 0.8rem 1rem; margin-bottom: 1rem; font-size: 0.85rem;
+            display: none;
+        }
+        .guest-notice {
+            background: rgba(107,203,255,0.1); color: #A0D4FF;
+            border: 1px solid rgba(107,203,255,0.3); border-radius: 0.8rem;
+            padding: 0.7rem 1rem; margin-bottom: 1rem; font-size: 0.85rem;
+            display: none; text-align: center;
+        }
+        body.guest-mode .guest-notice { display: block; }
+        
+        @media (max-width: 768px) {
+            .stats-row { grid-template-columns: repeat(2,1fr); }
+            .nav-custom { padding: 0.5rem 0; }
+            .brand-title { font-size: 1rem; }
+            .partner-card .card-header { padding: 0.8rem 1rem; }
+            .metric-row { font-size: 0.8rem; padding: 0.5rem 0; }
+        }
+        
+        .fade-in { animation: fadeIn 0.3s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        
+        .loader {
+            display: inline-block; width: 16px; height: 16px;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-radius: 50%; border-top-color: var(--accent-purple);
+            animation: spin 0.8s linear infinite; margin-right: 8px;
+            vertical-align: middle;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .loading-text { display: none; align-items: center; color: var(--text-secondary); font-size: 0.85rem; }
+        body.loading .loading-text { display: inline-flex; }
+        body.loading .btn-add { position: relative; padding-left: 2rem; }
+        body.loading .btn-add::before {
+            content: ''; position: absolute; left: 0.9rem; top: 50%;
+            transform: translateY(-50%); width: 12px; height: 12px;
+            border: 2px solid rgba(0,31,26,0.3); border-radius: 50%;
+            border-top-color: #001F1A; animation: spin 0.8s linear infinite;
+        }
+    </style>
+</head>
+<body class="guest-mode">
+
+<!-- Модальное окно пароля -->
+<div id="passwordModal" class="modal-pass">
+    <div class="modal-card fade-in">
+        <div class="mb-2">🔐 <span class="modal-title">ООО «Нейт»</span></div>
+        <p class="modal-desc">Введите пароль для редактирования данных</p>
+        <input type="password" id="passwordInput" class="form-control mb-3" placeholder="Пароль" autofocus>
+        <button id="submitPassword" class="btn-add w-100">Войти в режим редактирования</button>
+        <div id="passError" class="text-danger mt-2 small" style="display: none;">❌ Неверный пароль</div>
+        <button id="guestModeBtn" class="btn-guest">👁 Продолжить в режиме просмотра</button>
+    </div>
+</div>
+
+<!-- Навигация -->
+<nav class="nav-custom container" id="mainNav">
+    <div class="d-flex align-items-center">
+        <div class="logo-box">🧵</div>
+        <div>
+            <div class="brand-title">ООО «Нейт»</div>
+            <div class="brand-sub">Облачная касса | 70/30</div>
+        </div>
+    </div>
+    <div class="d-flex gap-2 flex-wrap">
+        <span class="loading-text"><span class="loader"></span>Синхронизация...</span>
+        <button class="btn-sm-custom btn-edit-only" id="exportBtn">📎 Экспорт</button>
+        <button class="btn-sm-custom btn-edit-only" id="clearAllBtn"> Очистить</button>
+        <button class="btn-sm-custom" id="logoutBtn" style="display: none;">🚪 Выход</button>
+    </div>
+</nav>
+
+<main id="appContent">
+    <div class="container">
+        <div id="firebaseWarning" class="db-warning">
+            ⚠️ Нет подключения к базе данных. Проверьте настройки Firebase Realtime Database.
+        </div>
+        <div class="guest-notice">
+            👁 Вы в режиме просмотра. <button class="btn-sm-custom" id="loginPromptBtn" style="padding: 0.2rem 0.6rem; font-size: 0.7rem;">Войти для редактирования</button>
+        </div>
+        
+        <div class="stats-row">
+            <div class="stat-box"><div class="label">💰 Доходы</div><div class="value" id="totalIncome" style="color:var(--accent-green)">0 ₽</div></div>
+            <div class="stat-box"><div class="label">📦 Расходы</div><div class="value" id="totalExpense" style="color:var(--accent-red)">0 ₽</div></div>
+            <div class="stat-box"><div class="label">📊 Прибыль</div><div class="value" id="totalProfit" style="color:#C88AFF">0 ₽</div></div>
+            <div class="stat-box"><div class="label">💵 В кассе</div><div class="value" id="cashRemaining" style="color:var(--accent-blue)">0 ₽</div></div>
+        </div>
+
+        <div class="rec-card" id="recBox"><div>⚡ <strong>Рекомендация</strong></div><div id="recText" class="mt-1"></div></div>
+
+        <div class="row g-4 mb-4">
+            <div class="col-md-6">
+                <div class="partner-card partner-nastya">
+                    <div class="card-header">
+                        <div class="d-flex align-items-center">
+                            <div class="avatar">👩🏻‍</div>
+                            <div><div class="partner-name">Настя <span class="partner-surname">Волкова</span></div></div>
+                        </div>
+                        <span class="share-badge">70%</span>
+                    </div>
+                    <div class="card-body d-flex flex-column">
+                        <div class="metric-row"><span>💎 Положено</span><span class="metric-value" id="nastyaShare">0 ₽</span></div>
+                        <div class="metric-row"><span>💸 Изъято</span><span class="metric-value" id="nastyaWithdrawn">0 ₽</span></div>
+                        <div class="metric-row"><span> Покупки</span><span class="metric-value" id="nastyaGoods">0 ₽</span></div>
+                        <div class="metric-row"><span>✈️ Путешествия</span><span class="metric-value" id="nastyaTravel">0 ₽</span></div>
+                        <div class="balance-box mt-auto"><div class="bal-label">Остаток / Долг</div><div class="bal-value" id="nastyaBalance">0 ₽</div></div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="partner-card partner-natalia">
+                    <div class="card-header">
+                        <div class="d-flex align-items-center">
+                            <div class="avatar">👩🏼</div>
+                            <div><div class="partner-name">Наташа <span class="partner-surname">Тейковцева</span></div></div>
+                        </div>
+                        <span class="share-badge">30%</span>
+                    </div>
+                    <div class="card-body d-flex flex-column">
+                        <div class="metric-row"><span> Положено</span><span class="metric-value" id="nataliaShare">0 ₽</span></div>
+                        <div class="metric-row"><span>💸 Изъято</span><span class="metric-value" id="nataliaWithdrawn">0 ₽</span></div>
+                        <div class="metric-row"><span>🛍 Покупки</span><span class="metric-value" id="nataliaGoods">0 ₽</span></div>
+                        <div class="metric-row"><span>✈️ Путешествия</span><span class="metric-value" id="nataliaTravel">0 ₽</span></div>
+                        <div class="balance-box mt-auto"><div class="bal-label">Остаток / Долг</div><div class="bal-value" id="nataliaBalance">0 ₽</div></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <ul class="nav nav-pills mb-3 gap-2" id="mainTabs">
+            <li class="nav-item"><button class="nav-link active" data-tab="add"> Новая операция</button></li>
+            <li class="nav-item"><button class="nav-link" data-tab="history">📋 История</button></li>
+            <li class="nav-item"><button class="nav-link" data-tab="analytics">📊 Аналитика</button></li>
+        </ul>
+
+        <div id="panelAdd" class="tab-pane show active">
+            <div class="card-section">
+                <div class="section-title">✨ Записать движение денег</div>
+                <form id="operationForm" class="row g-3">
+                    <div class="col-md-3"><label class="form-label">Дата</label><input type="date" class="form-control" id="txnDate" required></div>
+                    <div class="col-md-2"><label class="form-label">Сумма (₽)</label><input type="number" step="0.01" min="0.01" class="form-control" id="txnAmount" placeholder="0.00" required></div>
+                    <div class="col-md-2"><label class="form-label">Тип</label><select id="txnType" class="form-select" required><option value="" disabled selected>– Выбрать –</option><option value="income">💰 Доход</option><option value="expense">📦 Расход бизнеса</option><option value="personal">👤 Личное изъятие</option><option value="salary">💼 Зарплата</option></select></div>
+                    <div class="col-md-2" id="partnerGroup" style="display: none;"><label class="form-label">Партнёр</label><select id="txnPartner" class="form-select"><option value="nastya">Настя</option><option value="natalia">Наташа</option></select></div>
+                    <div class="col-md-3" id="categoryGroup" style="display: none;"><label class="form-label">Категория</label><select id="txnCategory" class="form-select"><option value="other">Другое</option><option value="goods">Покупка товара</option><option value="travel">Путешествие</option><option value="tech">Техника</option><option value="food">Еда</option><option value="rent">Аренда</option><option value="materials">Материалы</option><option value="logistics">Логистика</option><option value="taxes">Налоги</option><option value="marketing">Реклама</option></select></div>
+                    <div class="col-md-12"><label class="form-label">Комментарий</label><input type="text" class="form-control" id="txnComment" placeholder="Краткое описание" maxlength="100"></div>
+                    <div class="col-12 text-end"><button type="submit" class="btn btn-add px-4 btn-edit-only">✨ Добавить операцию</button></div>
+                </form>
+            </div>
+        </div>
+
+        <div id="panelHistory" style="display: none;">
+            <div class="card-section">
+                <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+                    <div class="section-title mb-0">📋 История операций</div>
+                    <div class="d-flex gap-2">
+                        <select id="monthFilter" class="form-select form-select-sm" style="width: auto;"><option value="all">Все месяцы</option></select>
+                        <select id="typeFilter" class="form-select form-select-sm" style="width: auto;"><option value="all">Все типы</option><option value="income">Доход</option><option value="expense">Расход</option><option value="personal">Изъятие</option><option value="salary">Зарплата</option></select>
+                    </div>
+                </div>
+                <div class="filter-row d-flex flex-wrap gap-2 mb-3">
+                    <button class="filter-chip active" data-filter="all">Все</button>
+                    <button class="filter-chip" data-filter="nastya">👩‍ Настя</button>
+                    <button class="filter-chip" data-filter="natalia">Наташа</button>
+                    <button class="filter-chip" data-filter="goods">🛍 Покупки</button>
+                    <button class="filter-chip" data-filter="travel">✈️ Путешествия</button>
+                </div>
+                <div class="table-responsive">
+                    <table class="table history-table">
+                        <thead><tr><th>Дата</th><th>Сумма</th><th>Тип</th><th>Категория</th><th>Партнёр</th><th>Комментарий</th><th class="btn-edit-only"></th></tr></thead>
+                        <tbody id="historyTableBody"></tbody>
+                    </table>
+                    <div id="emptyHistoryMsg" class="text-center py-4" style="color:#7A7AA0; display: none;">📭 Нет операций</div>
+                </div>
+            </div>
+        </div>
+
+        <div id="panelAnalytics" style="display: none;">
+            <div class="row g-3">
+                <div class="col-md-6"><div class="chart-box"><h6 class="text-center mb-2">🥧 Изъятия партнёров</h6><canvas id="pieChart"></canvas><div id="pieEmpty" class="text-center mt-2" style="color:#888; display: none;">Нет данных</div></div></div>
+                <div class="col-md-6"><div class="chart-box"><h6 class="text-center mb-2">📊 Доходы / Расходы / Изъятия</h6><canvas id="barChart"></canvas><div id="barEmpty" class="text-center mt-2" style="color:#888; display: none;">Нет данных</div></div></div>
+                <div class="col-md-6"><div class="chart-box"><h6 class="text-center mb-2"> Динамика по месяцам</h6><canvas id="lineChart"></canvas><div id="lineEmpty" style="display: none; color:#888; text-align:center;">Нет данных</div></div></div>
+                <div class="col-md-6"><div class="chart-box"><h6 class="text-center mb-2">🏷 Расходы по категориям</h6><canvas id="catChart"></canvas><div id="catEmpty" style="display: none; text-align:center; color:#888;">Нет расходов</div></div></div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<div id="toastContainer" class="toast-container"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+const APP_CONFIG = {
+    PASSWORD: 'нейт2026',
+    PARTNERS: {
+        nastya: { name: 'Настя', surname: 'Волкова', share: 0.7, emoji: '👩🏻‍🦰', color: '#C454FF' },
+        natalia: { name: 'Наташа', surname: 'Тейковцева', share: 0.3, emoji: '👩🏼', color: '#F39C12' }
+    },
+    CATEGORIES: {
+        other: 'Другое', goods: 'Товар', travel: 'Путешествие', tech: 'Техника',
+        food: 'Еда', rent: 'Аренда', materials: 'Материалы', logistics: 'Логистика',
+        taxes: 'Налоги', marketing: 'Реклама', marketplace: 'Комиссия МП'
+    }
+};
+
+const firebaseConfig = {
+    apiKey: "AIzaSyCSME5fUFOS6R80-2-wEgOyAUyJx1M0a1A",
+    authDomain: "neit-41882.firebaseapp.com",
+    projectId: "neit-41882",
+    storageBucket: "neit-41882.firebasestorage.app",
+    messagingSenderId: "478613249008",
+    appId: "1:478613249008:web:42f214670ccc00a4935b35",
+    databaseURL: "https://neit-41882-default-rtdb.europe-west1.firebasedatabase.app/"
+};
+
+firebase.initializeApp(firebaseConfig);
+const database = firebase.database();
+const transactionsRef = database.ref('transactions');
+
+let transactions = [];
+let charts = {};
+let filters = { partner: 'all', month: 'all', type: 'all' };
+let isAuthorized = false;
+
+const els = {
+    modal: document.getElementById('passwordModal'),
+    passInput: document.getElementById('passwordInput'),
+    passError: document.getElementById('passError'),
+    submitPass: document.getElementById('submitPassword'),
+    guestModeBtn: document.getElementById('guestModeBtn'),
+    loginPromptBtn: document.getElementById('loginPromptBtn'),
+    logoutBtn: document.getElementById('logoutBtn'),
+    operationForm: document.getElementById('operationForm'),
+    txnType: document.getElementById('txnType'),
+    partnerGroup: document.getElementById('partnerGroup'),
+    categoryGroup: document.getElementById('categoryGroup'),
+    historyTableBody: document.getElementById('historyTableBody'),
+    emptyHistoryMsg: document.getElementById('emptyHistoryMsg'),
+    monthFilter: document.getElementById('monthFilter'),
+    typeFilter: document.getElementById('typeFilter'),
+    exportBtn: document.getElementById('exportBtn'),
+    clearAllBtn: document.getElementById('clearAllBtn'),
+    recBox: document.getElementById('recBox'),
+    recText: document.getElementById('recText'),
+    firebaseWarning: document.getElementById('firebaseWarning'),
+    toastContainer: document.getElementById('toastContainer')
+};
+
+const formatMoney = (val) => new Intl.NumberFormat('ru-RU', { style:'currency', currency:'RUB', maximumFractionDigits:0 }).format(val);
+const formatDateShort = (dateStr) => !dateStr ? '' : new Date(dateStr + 'T00:00:00').toLocaleDateString('ru-RU');
+const catLabel = (cat) => APP_CONFIG.CATEGORIES[cat] || cat;
+
+const validateTransaction = (data) => {
+    const errors = [];
+    if (!data.date) errors.push('Укажите дату');
+    if (!data.amount || data.amount <= 0) errors.push('Сумма должна быть больше 0');
+    if (!data.type) errors.push('Выберите тип операции');
+    if ((data.type === 'personal' || data.type === 'salary') && !data.partner) errors.push('Выберите партнёра');
+    if (data.amount > 10000000) errors.push('Слишком большая сумма');
+    return errors;
+};
+
+function getMetrics() {
+    let income = 0, expense = 0;
+    const withdrawals = { nastya: 0, natalia: 0 };
+    const byCategory = { nastya: { goods: 0, travel: 0 }, natalia: { goods: 0, travel: 0 } };
+    
+    for(const t of transactions) {
+        const amt = Number(t.amount) || 0;
+        if(t.type === 'income') income += amt;
+        else if(t.type === 'expense') expense += amt;
+        else if((t.type === 'personal' || t.type === 'salary') && withdrawals[t.partner] !== undefined) {
+            withdrawals[t.partner] += amt;
+            if(t.category === 'goods') byCategory[t.partner].goods += amt;
+            if(t.category === 'travel') byCategory[t.partner].travel += amt;
+        }
+    }
+    
+    const profit = income - expense;
+    const shares = { nastya: profit * APP_CONFIG.PARTNERS.nastya.share, natalia: profit * APP_CONFIG.PARTNERS.natalia.share };
+    const balances = { nastya: shares.nastya - withdrawals.nastya, natalia: shares.natalia - withdrawals.natalia };
+    return { income, expense, profit, shares, withdrawals, byCategory, balances, cashRemaining: profit - withdrawals.nastya - withdrawals.natalia };
+}
+
+function renderUI() {
+    const m = getMetrics();
+    document.getElementById('totalIncome').innerText = formatMoney(m.income);
+    document.getElementById('totalExpense').innerText = formatMoney(m.expense);
+    document.getElementById('totalProfit').innerText = formatMoney(m.profit);
+    document.getElementById('cashRemaining').innerText = formatMoney(m.cashRemaining);
+    
+    ['nastya', 'natalia'].forEach(key => {
+        document.getElementById(`${key}Share`).innerText = formatMoney(m.shares[key]);
+        document.getElementById(`${key}Withdrawn`).innerText = formatMoney(m.withdrawals[key]);
+        document.getElementById(`${key}Goods`).innerText = formatMoney(m.byCategory[key].goods);
+        document.getElementById(`${key}Travel`).innerText = formatMoney(m.byCategory[key].travel);
+        const balEl = document.getElementById(`${key}Balance`);
+        balEl.innerText = formatMoney(m.balances[key]);
+        balEl.className = `bal-value ${m.balances[key] >= 0 ? 'bal-green' : 'bal-red'}`;
+    });
+    
+    if(m.withdrawals.nastya > 0 || m.withdrawals.natalia > 0) {
+        els.recBox.style.display = 'block';
+        let rc = '';
+        if(m.balances.nastya > 0 && m.balances.natalia < 0) rc = `‍🦰 Настя: остаток ${formatMoney(m.balances.nastya)}, Наташа: перерасход ${formatMoney(Math.abs(m.balances.natalia))}.<br>Рекомендуемый перевод: ${formatMoney(Math.min(m.balances.nastya, Math.abs(m.balances.natalia)))}`;
+        else if(m.balances.nastya < 0 && m.balances.natalia > 0) rc = `Наташа: остаток ${formatMoney(m.balances.natalia)}, Настя: перерасход ${formatMoney(Math.abs(m.balances.nastya))}.<br>Рекомендуемый перевод: ${formatMoney(Math.min(m.balances.natalia, Math.abs(m.balances.nastya)))}`;
+        else if(m.balances.nastya < 0 && m.balances.natalia < 0) rc = `⚠️ Обе изъяли больше доли. Общий перерасход: ${formatMoney(Math.abs(m.balances.nastya)+Math.abs(m.balances.natalia))}`;
+        else rc = `✅ Балансы в порядке.`;
+        els.recText.innerHTML = rc;
+    } else { els.recBox.style.display = 'none'; }
+    
+    renderHistoryTable();
+    updateMonthSelect();
+    renderCharts(m);
+}
+
+function getFilteredTransactions() {
+    let f = [...transactions].sort((a,b) => (b.date||'').localeCompare(a.date||''));
+    if(filters.partner === 'nastya' || filters.partner === 'natalia') f = f.filter(t => t.partner === filters.partner);
+    else if(filters.partner === 'goods') f = f.filter(t => t.category === 'goods');
+    else if(filters.partner === 'travel') f = f.filter(t => t.category === 'travel');
+    if(filters.month !== 'all') f = f.filter(t => t.date?.startsWith(filters.month));
+    if(filters.type !== 'all') f = f.filter(t => t.type === filters.type);
+    return f;
+}
+
+function renderHistoryTable() {
+    const filtered = getFilteredTransactions();
+    const tbody = els.historyTableBody;
+    if(filtered.length === 0) { tbody.innerHTML = ''; els.emptyHistoryMsg.style.display = 'block'; return; }
+    els.emptyHistoryMsg.style.display = 'none';
+    
+    let html = '';
+    for(const t of filtered) {
+        const partner = t.partner ? `${APP_CONFIG.PARTNERS[t.partner]?.emoji || ''} ${APP_CONFIG.PARTNERS[t.partner]?.name || t.partner}` : '—';
+        const sign = t.type === 'income' ? '+' : '−';
+        const typeBadge = { income:'<span class="badge-income">Доход</span>', expense:'<span class="badge-expense">Расход</span>', personal:'<span class="badge-personal">Изъятие</span>', salary:'<span class="badge-salary">Зарплата</span>' }[t.type] || '';
+        const catSpan = t.category ? `<span class="badge-cat">${catLabel(t.category)}</span>` : '';
+        const delBtn = isAuthorized ? `<button class="btn-del" data-id="${t.id}">🗑</button>` : '';
+        html += `<tr><td>${formatDateShort(t.date)}</td><td>${sign}${formatMoney(Math.abs(t.amount))}</td><td>${typeBadge}</td><td>${catSpan}</td><td>${partner}</td><td>${t.comment||'—'}</td><td class="btn-edit-only">${delBtn}</td></tr>`;
+    }
+    tbody.innerHTML = html;
+    if(isAuthorized) {
+        tbody.querySelectorAll('.btn-del').forEach(btn => {
+            btn.onclick = async () => {
+                if(confirm('Удалить эту запись?')) {
+                    transactions = transactions.filter(t => t.id !== btn.dataset.id);
+                    try { await transactionsRef.set(transactions); showToast('Запись удалена','🗑️'); } catch { showToast('Ошибка удаления','❌'); }
+                }
+            };
+        });
+    }
+}
+
+function updateMonthSelect() {
+    const months = [...new Set(transactions.map(t => t.date?.slice(0,7)).filter(Boolean))].sort();
+    const mNames = ['','Янв','Фев','Мар','Апр','Май','Июн','Июл','Авг','Сен','Окт','Ноя','Дек'];
+    let opts = '<option value="all">Все месяцы</option>';
+    months.forEach(m => { const [y,mo]=m.split('-'); opts+=`<option value="${m}" ${filters.month===m?'selected':''}>${mNames[parseInt(mo)]} ${y}</option>`; });
+    els.monthFilter.innerHTML = opts;
+}
+
+function renderCharts(m) {
+    const updateOrCreate = (id, cfg) => {
+        if(charts[id]) { charts[id].data = cfg.data; charts[id].options = cfg.options; charts[id].update('none'); }
+        else charts[id] = new Chart(document.getElementById(id), cfg);
+    };
+    const opts = { responsive:true, maintainAspectRatio:false, plugins:{ legend:{ labels:{ color:'#DDD', font:{size:11} } }, tooltip:{ callbacks:{ label:ctx=>`${ctx.label||''}: ${formatMoney(ctx.raw)}` } } }, scales:{ x:{ ticks:{color:'#CCC'}, grid:{color:'rgba(255,255,255,0.05)'} }, y:{ beginAtZero:true, ticks:{color:'#CCC'}, grid:{color:'rgba(255,255,255,0.05)'} } } };
+    
+    if(m.withdrawals.nastya===0 && m.withdrawals.natalia===0) document.getElementById('pieEmpty').style.display='block';
+    else { document.getElementById('pieEmpty').style.display='none'; updateOrCreate('pieChart',{type:'doughnut',data:{labels:['Настя','Наташа'],datasets:[{data:[m.withdrawals.nastya,m.withdrawals.natalia],backgroundColor:[APP_CONFIG.PARTNERS.nastya.color,APP_CONFIG.PARTNERS.natalia.color],borderColor:'#13151F',borderWidth:3}]},options:{...opts,plugins:{...opts.plugins,legend:{...opts.plugins.legend,position:'bottom'}}}}); }
+    
+    if(m.income===0 && m.expense===0) document.getElementById('barEmpty').style.display='block';
+    else { document.getElementById('barEmpty').style.display='none'; updateOrCreate('barChart',{type:'bar',data:{labels:['Доходы','Расходы','Настя','Наташа'],datasets:[{data:[m.income,m.expense,m.withdrawals.nastya,m.withdrawals.natalia],backgroundColor:['#2ED15E','#FF7777',APP_CONFIG.PARTNERS.nastya.color,APP_CONFIG.PARTNERS.natalia.color],borderRadius:8}]},options:{...opts,plugins:{...opts.plugins,legend:{display:false}}}}); }
+    
+    const monthly = {};
+    transactions.forEach(t => { if(!t.date) return; const mn=t.date.slice(0,7); if(!monthly[mn]) monthly[mn]={inc:0,exp:0}; const a=Number(t.amount)||0; if(t.type==='income') monthly[mn].inc+=a; else if(t.type==='expense') monthly[mn].exp+=a; });
+    const months = Object.keys(monthly).sort();
+    if(months.length===0) document.getElementById('lineEmpty').style.display='block';
+    else { document.getElementById('lineEmpty').style.display='none'; updateOrCreate('lineChart',{type:'line',data:{labels:months,datasets:[{label:'Доходы',data:months.map(m=>monthly[m].inc),borderColor:'#2ED15E',backgroundColor:'rgba(46,209,94,0.1)',fill:true,tension:0.3},{label:'Расходы',data:months.map(m=>monthly[m].exp),borderColor:'#FF7777',backgroundColor:'rgba(255,119,119,0.1)',fill:true,tension:0.3}]},options:opts}); }
+    
+    const catExp = new Map();
+    transactions.filter(t=>t.type==='expense').forEach(t=>{ const c=t.category||'other'; catExp.set(c,(catExp.get(c)||0)+(Number(t.amount)||0)); });
+    if(catExp.size===0) document.getElementById('catEmpty').style.display='block';
+    else { document.getElementById('catEmpty').style.display='none'; const cols=['#9B59B6','#F39C12','#FF7777','#6BCBFF','#2ED15E','#FFD966','#E879A8','#3498DB','#1ABC9C','#E67E22']; updateOrCreate('catChart',{type:'pie',data:{labels:Array.from(catExp.keys()).map(catLabel),datasets:[{data:Array.from(catExp.values()),backgroundColor:cols.slice(0,catExp.size)}]},options:{...opts,plugins:{...opts.plugins,legend:{...opts.plugins.legend,position:'bottom'}}}}); }
+}
+
+async function addTransaction(e) {
+    e.preventDefault();
+    if(!isAuthorized) { showToast('Войдите для добавления операций','🔐'); els.modal.style.display='flex'; return; }
+    document.body.classList.add('loading');
+    const data = {
+        date: document.getElementById('txnDate').value,
+        amount: parseFloat(document.getElementById('txnAmount').value),
+        type: document.getElementById('txnType').value,
+        comment: document.getElementById('txnComment').value.trim(),
+        category: document.getElementById('txnCategory').value,
+        partner: document.getElementById('txnPartner').value
+    };
+    if(data.type==='income') data.category='other';
+    if(data.type!=='personal' && data.type!=='salary') data.partner=null;
+    if(data.type!=='expense' && data.type!=='personal') data.category=null;
+    
+    const errs = validateTransaction(data);
+    if(errs.length) { showToast(errs[0],'❌'); document.body.classList.remove('loading'); return; }
+    
+    const newTxn = { id: Date.now().toString(36)+Math.random().toString(36).substring(2,8), ...data };
+    transactions.push(newTxn);
+    try {
+        await transactionsRef.set(transactions);
+        showToast('Операция добавлена','✅');
+        els.operationForm.reset();
+        document.getElementById('txnDate').valueAsDate = new Date();
+        els.partnerGroup.style.display='none'; els.categoryGroup.style.display='none';
+    } catch { showToast('Ошибка сохранения','❌'); transactions.pop(); }
+    document.body.classList.remove('loading');
+}
+
+function showToast(msg, icon='✅') {
+    const t = document.createElement('div'); t.className='toast-msg fade-in'; t.innerHTML=`<span>${icon}</span><span>${msg}</span>`;
+    els.toastContainer.appendChild(t); setTimeout(()=>{t.style.opacity='0';setTimeout(()=>t.remove(),300);},2500);
+}
+
+async function clearAll() {
+    if(!isAuthorized) return;
+    if(confirm('⚠️ УДАЛИТЬ ВСЕ ОПЕРАЦИИ?')) { transactions=[]; await transactionsRef.set(transactions); showToast('Все данные удалены','🗑️'); }
+}
+
+function exportCSV() {
+    if(!transactions.length) { showToast('Нет данных','⚠️'); return; }
+    const h=['Дата','Сумма','Тип','Партнёр','Категория','Комментарий'];
+    const r=transactions.map(t=>[t.date,t.amount,t.type,t.partner?APP_CONFIG.PARTNERS[t.partner]?.name||t.partner:'',catLabel(t.category),`"${(t.comment||'').replace(/"/g,'""')}"`]);
+    const csv='\uFEFF'+[h.join(';')].concat(r.map(x=>x.join(';'))).join('\n');
+    const b=new Blob([csv],{type:'text/csv;charset=utf-8;'}), a=document.createElement('a');
+    a.href=URL.createObjectURL(b); a.download=`neyt_export_${new Date().toISOString().slice(0,10)}.csv`; a.click(); URL.revokeObjectURL(a.href);
+    showToast('Экспорт выполнен','📎');
+}
+
+function checkPassword() {
+    if(els.passInput.value.trim()===APP_CONFIG.PASSWORD) {
+        isAuthorized=true; document.body.classList.replace('guest-mode','auth-mode');
+        els.modal.style.display='none'; els.logoutBtn.style.display='inline-flex';
+        showToast('Режим редактирования активен','🔓'); renderUI();
+    } else { els.passError.style.display='block'; els.passInput.value=''; els.passInput.focus(); setTimeout(()=>els.passError.style.display='none',3000); }
+}
+
+function enterGuestMode() {
+    els.modal.style.display='none';
+    showToast('Режим просмотра активен','');
+    renderUI();
+}
+
+function logout() {
+    isAuthorized=false; document.body.classList.replace('auth-mode','guest-mode');
+    els.logoutBtn.style.display='none'; els.modal.style.display='flex';
+    showToast('Вы вышли из режима редактирования','🔐'); renderUI();
+}
+
+function initApp() {
+    database.ref('.info/connected').on('value', s=>{ els.firebaseWarning.style.display=(s.val()===true)?'none':'block'; });
+    transactionsRef.on('value', snap=>{ transactions=(snap.val()&&Array.isArray(snap.val()))?snap.val():[]; renderUI(); }, ()=>{ els.firebaseWarning.style.display='block'; });
+    
+    els.submitPass.onclick=checkPassword;
+    els.passInput.onkeypress=e=>{ if(e.key==='Enter') checkPassword(); };
+    els.guestModeBtn.onclick=enterGuestMode;
+    els.loginPromptBtn.onclick=()=>{ els.modal.style.display='flex'; };
+    els.logoutBtn.onclick=logout;
+    
+    els.txnType.onchange=()=>{ const v=els.txnType.value; els.partnerGroup.style.display=(v==='personal'||v==='salary')?'block':'none'; els.categoryGroup.style.display=(v==='expense'||v==='personal')?'block':'none'; };
+    els.operationForm.onsubmit=addTransaction;
+    
+    document.querySelectorAll('#mainTabs .nav-link').forEach(btn=>{
+        btn.onclick=()=>{
+            document.querySelectorAll('#mainTabs .nav-link').forEach(b=>b.classList.remove('active'));
+            btn.classList.add('active');
+            const tab=btn.dataset.tab;
+            document.getElementById('panelAdd').style.display=tab==='add'?'block':'none';
+            document.getElementById('panelHistory').style.display=tab==='history'?'block':'none';
+            document.getElementById('panelAnalytics').style.display=tab==='analytics'?'block':'none';
+            if(tab==='analytics') setTimeout(()=>renderCharts(getMetrics()),50);
+        };
+    });
+    
+    document.querySelectorAll('.filter-chip').forEach(c=>{ c.onclick=function(){ document.querySelectorAll('.filter-chip').forEach(x=>x.classList.remove('active')); this.classList.add('active'); filters.partner=this.dataset.filter; renderHistoryTable(); }; });
+    els.monthFilter.onchange=e=>{ filters.month=e.target.value; renderHistoryTable(); };
+    els.typeFilter.onchange=e=>{ filters.type=e.target.value; renderHistoryTable(); };
+    els.exportBtn.onclick=exportCSV;
+    els.clearAllBtn.onclick=clearAll;
+    document.getElementById('txnDate').valueAsDate=new Date();
+    
+    ['pieChart','barChart','lineChart','catChart'].forEach(id=>{
+        if(document.getElementById(id)) charts[id]=new Chart(document.getElementById(id),{type:'doughnut',data:{labels:[],datasets:[{data:[]}]},options:{responsive:true,plugins:{legend:{display:false}}}});
+    });
+}
+initApp();
+</script>
+</body>
+</html>
