@@ -104,7 +104,6 @@
             display: flex; justify-content: space-between; align-items: center;
         }
         
-        /* Стилизация аниме-аватарок */
         .avatar {
             width: 44px;
             height: 44px;
@@ -219,7 +218,7 @@
         .badge-cat {
             background: rgba(255,255,255,0.08);
             color: #D0D0F0;
-            border-radius: 1rem; padding: 0.2rem 0.6rem !important; font-size: 0.7rem;
+            border-radius: 1rem; padding: 0.2rem 0.6; font-size: 0.7rem;
         }
         .btn-del {
             background: none;
@@ -510,8 +509,8 @@
 const APP_CONFIG = {
     PASSWORD: 'нейт2026',
     PARTNERS: {
-        nastya: { name: 'Анастасия', surname: 'Волкова', share: 0.7, emoji: '👩🏽', color: '#C454FF' },
-        natalia: { name: 'Наталья', surname: 'Тейковцева', share: 0.3, emoji: '👩🏻', color: '#F39C12' }
+        nastya: { name: 'Анастасия', surname: 'Волкова', share: 0.7, emoji: '👩🏽', color: '#9B59B6' },
+        natalia: { name: 'Наталья', surname: 'Тейковцева', share: 0.3, emoji: '👩🏻', color: '#E879A8' }
     },
     CATEGORIES: {
         other: 'Другое', goods: 'Товар', travel: 'Путешествие', tech: 'Техника',
@@ -537,6 +536,7 @@ let transactions = [];
 let charts = {};
 let filters = { partner: 'all', month: 'all', type: 'all' };
 let isAuthorized = false;
+
 const els = {
     modal: document.getElementById('passwordModal'),
     passInput: document.getElementById('passwordInput'),
@@ -579,6 +579,7 @@ function getMetrics() {
     let income = 0, expense = 0;
     const withdrawals = { nastya: 0, natalia: 0 };
     const byCategory = { nastya: { goods: 0, travel: 0 }, natalia: { goods: 0, travel: 0 } };
+    
     for(const t of transactions) {
         const amt = Number(t.amount) || 0;
         if(t.type === 'income') income += amt;
@@ -593,215 +594,4 @@ function getMetrics() {
     const profit = income - expense;
     const shares = { nastya: profit * APP_CONFIG.PARTNERS.nastya.share, natalia: profit * APP_CONFIG.PARTNERS.natalia.share };
     const balances = { nastya: shares.nastya - withdrawals.nastya, natalia: shares.natalia - withdrawals.natalia };
-    return { income, expense, profit, shares, withdrawals, byCategory, balances, cashRemaining: profit - withdrawals.nastya - withdrawals.natalia };
-}
-
-function renderUI() {
-    const m = getMetrics();
-    document.getElementById('totalIncome').innerText = formatMoney(m.income);
-    document.getElementById('totalExpense').innerText = formatMoney(m.expense);
-    document.getElementById('totalProfit').innerText = formatMoney(m.profit);
-    document.getElementById('cashRemaining').innerText = formatMoney(m.cashRemaining);
-    
-    ['nastya', 'natalia'].forEach(key => {
-        document.getElementById(`${key}Share`).innerText = formatMoney(m.shares[key]);
-        document.getElementById(`${key}Withdrawn`).innerText = formatMoney(m.withdrawals[key]);
-        document.getElementById(`${key}Goods`).innerText = formatMoney(m.byCategory[key].goods);
-        document.getElementById(`${key}Travel`).innerText = formatMoney(m.byCategory[key].travel);
-        const balEl = document.getElementById(`${key}Balance`);
-        balEl.innerText = formatMoney(m.balances[key]);
-        balEl.className = `bal-value ${m.balances[key] >= 0 ? 'bal-green' : 'bal-red'}`;
-    });
-    if(m.withdrawals.nastya > 0 || m.withdrawals.natalia > 0) {
-        els.recBox.style.display = 'block';
-        let rc = '';
-        if(m.balances.nastya > 0 && m.balances.natalia < 0) rc = `👩🏽 Анастасия: остаток ${formatMoney(m.balances.nastya)}, Наталья: перерасход ${formatMoney(Math.abs(m.balances.natalia))}.<br>Рекомендуемый перевод: ${formatMoney(Math.min(m.balances.nastya, Math.abs(m.balances.natalia)))}`;
-        else if(m.balances.nastya < 0 && m.balances.natalia > 0) rc = `👩🏻 Наталья: остаток ${formatMoney(m.balances.natalia)}, Анастасия: перерасход ${formatMoney(Math.abs(m.balances.nastya))}.<br>Рекомендуемый перевод: ${formatMoney(Math.min(m.balances.natalia, Math.abs(m.balances.nastya)))}`;
-        else if(m.balances.nastya < 0 && m.balances.natalia < 0) rc = `⚠️ Обе изъяли больше доли. Общий перерасход: ${formatMoney(Math.abs(m.balances.nastya)+Math.abs(m.balances.natalia))}`;
-        else rc = `✅ Балансы в порядке.`;
-        els.recText.innerHTML = rc;
-    } else { els.recBox.style.display = 'none'; }
-    
-    renderHistoryTable();
-    updateMonthSelect();
-    renderCharts(m);
-}
-
-function getFilteredTransactions() {
-    let f = [...transactions].sort((a,b) => (b.date||'').localeCompare(a.date||''));
-    if(filters.partner === 'nastya' || filters.partner === 'natalia') f = f.filter(t => t.partner === filters.partner);
-    else if(filters.partner === 'goods') f = f.filter(t => t.category === 'goods');
-    else if(filters.partner === 'travel') f = f.filter(t => t.category === 'travel');
-    if(filters.month !== 'all') f = f.filter(t => t.date?.startsWith(filters.month));
-    if(filters.type !== 'all') f = f.filter(t => t.type === filters.type);
-    return f;
-}
-
-function renderHistoryTable() {
-    const filtered = getFilteredTransactions();
-    const tbody = els.historyTableBody;
-    if(filtered.length === 0) { tbody.innerHTML = ''; els.emptyHistoryMsg.style.display = 'block'; return; }
-    els.emptyHistoryMsg.style.display = 'none';
-    let html = '';
-    for(const t of filtered) {
-        const partner = t.partner ? `${APP_CONFIG.PARTNERS[t.partner]?.emoji || ''} ${APP_CONFIG.PARTNERS[t.partner]?.name || t.partner}` : '—';
-        const sign = t.type === 'income' ? '+' : '−';
-        const typeBadge = { income:'<span class="badge-income">Доход</span>', expense:'<span class="badge-expense">Расход</span>', personal:'<span class="badge-personal">Изъятие</span>', salary:'<span class="badge-salary">Зарплата</span>' }[t.type] || '';
-        const catSpan = t.category ? `<span class="badge-cat">${catLabel(t.category)}</span>` : '';
-        const delBtn = isAuthorized ? `<button class="btn-del" data-id="${t.id}">🗑</button>` : '';
-        html += `<tr><td>${formatDateShort(t.date)}</td><td>${sign}${formatMoney(Math.abs(t.amount))}</td><td>${typeBadge}</td><td>${catSpan}</td><td>${partner}</td><td>${t.comment||'—'}</td><td class="btn-edit-only">${delBtn}</td></tr>`;
-    }
-    tbody.innerHTML = html;
-    if(isAuthorized) {
-        tbody.querySelectorAll('.btn-del').forEach(btn => {
-            btn.onclick = async () => {
-                if(confirm('Удалить эту запись?')) {
-                    transactions = transactions.filter(t => t.id !== btn.dataset.id);
-                    try { await transactionsRef.set(transactions); showToast('Запись удалена','🗑️'); } catch { showToast('Ошибка удаления','❌'); }
-                }
-            };
-        });
-    }
-}
-
-function updateMonthSelect() {
-    const months = [...new Set(transactions.map(t => t.date?.slice(0,7)).filter(Boolean))].sort();
-    const mNames = ['','Янв','Фев','Мар','Апр','Май','Июн','Июл','Авг','Сен','Окт','Ноя','Дек'];
-    let opts = '<option value="all">Все месяцы</option>';
-    months.forEach(m => { const [y,mo]=m.split('-'); opts+=`<option value="${m}" ${filters.month===m?'selected':''}>${mNames[parseInt(mo)]} ${y}</option>`; });
-    els.monthFilter.innerHTML = opts;
-}
-
-function renderCharts(m) {
-    const updateOrCreate = (id, cfg) => {
-        if(charts[id]) { charts[id].data = cfg.data; charts[id].options = cfg.options; charts[id].update('none'); }
-        else charts[id] = new Chart(document.getElementById(id), cfg);
-    };
-    const opts = { responsive:true, maintainAspectRatio:false, plugins:{ legend:{ labels:{ color:'#DDD', font:{size:11} } }, tooltip:{ callbacks:{ label:ctx=>`${ctx.label||''}: ${formatMoney(ctx.raw)}` } } }, scales:{ x:{ ticks:{color:'#CCC'}, grid:{color:'rgba(255,255,255,0.05)'} }, y:{ beginAtZero:true, ticks:{color:'#CCC'}, grid:{color:'rgba(255,255,255,0.05)'} } } };
-    if(m.withdrawals.nastya===0 && m.withdrawals.natalia===0) document.getElementById('pieEmpty').style.display='block';
-    else { document.getElementById('pieEmpty').style.display='none'; updateOrCreate('pieChart',{type:'doughnut',data:{labels:['Анастасия','Наталья'],datasets:[{data:[m.withdrawals.nastya,m.withdrawals.natalia],backgroundColor:[APP_CONFIG.PARTNERS.nastya.color,APP_CONFIG.PARTNERS.natalia.color],borderColor:'#13151F',borderWidth:3}]},options:{...opts,plugins:{...opts.plugins,legend:{...opts.plugins.legend,position:'bottom'}}}}); }
-    
-    if(m.income===0 && m.expense===0) document.getElementById('barEmpty').style.display='block';
-    else { document.getElementById('barEmpty').style.display='none'; updateOrCreate('barChart',{type:'bar',data:{labels:['Доходы','Расходы','Анастасия','Наталья'],datasets:[{data:[m.income,m.expense,m.withdrawals.nastya,m.withdrawals.natalia],backgroundColor:['#2ED15E','#FF7777',APP_CONFIG.PARTNERS.nastya.color,APP_CONFIG.PARTNERS.natalia.color],borderRadius:8}]},options:{...opts,plugins:{...opts.plugins,legend:{display:false}}}}); }
-    
-    const monthly = {};
-    transactions.forEach(t => { if(!t.date) return; const mn=t.date.slice(0,7); if(!monthly[mn]) monthly[mn]={inc:0,exp:0}; const a=Number(t.amount)||0; if(t.type==='income') monthly[mn].inc+=a; else if(t.type==='expense') monthly[mn].exp+=a; });
-    const months = Object.keys(monthly).sort();
-    if(months.length===0) document.getElementById('lineEmpty').style.display='block';
-    else { document.getElementById('lineEmpty').style.display='none'; updateOrCreate('lineChart',{type:'line',data:{labels:months,datasets:[{label:'Доходы',data:months.map(m=>monthly[m].inc),borderColor:'#2ED15E',backgroundColor:'rgba(46,209,94,0.1)',fill:true,tension:0.3},{label:'Расходы',data:months.map(m=>monthly[m].exp),borderColor:'#FF7777',backgroundColor:'rgba(255,119,119,0.1)',fill:true,tension:0.3}]},options:opts}); }
-    
-    const catExp = new Map();
-    transactions.filter(t=>t.type==='expense').forEach(t=>{ const c=t.category||'other'; catExp.set(c,(catExp.get(c)||0)+(Number(t.amount)||0)); });
-    if(catExp.size===0) document.getElementById('catEmpty').style.display='block';
-    else { document.getElementById('catEmpty').style.display='none'; const cols=['#9B59B6','#F39C12','#FF7777','#6BCBFF','#2ED15E','#FFD966','#E879A8','#3498DB','#1ABC9C','#E67E22']; updateOrCreate('catChart',{type:'pie',data:{labels:Array.from(catExp.keys()).map(catLabel),datasets:[{data:Array.from(catExp.values()),backgroundColor:cols.slice(0,catExp.size)}]},options:{...opts,plugins:{...opts.plugins,legend:{...opts.plugins.legend,position:'bottom'}}}}); }
-}
-
-async function addTransaction(e) {
-    e.preventDefault();
-    if(!isAuthorized) { showToast('Войдите для добавления операций','🔐'); els.modal.style.display='flex'; return; }
-    document.body.classList.add('loading');
-    const data = {
-        date: document.getElementById('txnDate').value,
-        amount: parseFloat(document.getElementById('txnAmount').value),
-        type: document.getElementById('txnType').value,
-        comment: document.getElementById('txnComment').value.trim(),
-        category: document.getElementById('txnCategory').value,
-        partner: document.getElementById('txnPartner').value
-    };
-    if(data.type==='income') data.category='other';
-    if(data.type!=='personal' && data.type!=='salary') data.partner=null;
-    if(data.type!=='expense' && data.type!=='personal') data.category=null;
-    
-    const errs = validateTransaction(data);
-    if(errs.length) { showToast(errs[0],'❌'); document.body.classList.remove('loading'); return; }
-    
-    const newTxn = { id: Date.now().toString(36)+Math.random().toString(36).substring(2,8), ...data };
-    transactions.push(newTxn);
-    try {
-        await transactionsRef.set(transactions);
-        showToast('Операция добавлена','✅');
-        els.operationForm.reset();
-        document.getElementById('txnDate').valueAsDate = new Date();
-        els.partnerGroup.style.display='none'; els.categoryGroup.style.display='none';
-    } catch { showToast('Ошибка сохранения','❌'); transactions.pop(); }
-    document.body.classList.remove('loading');
-}
-
-function showToast(msg, icon='✅') {
-    const t = document.createElement('div'); t.className='toast-msg fade-in'; t.innerHTML=`<span>${icon}</span><span>${msg}</span>`;
-    els.toastContainer.appendChild(t); setTimeout(()=>{t.style.opacity='0';setTimeout(()=>t.remove(),300);},2500);
-}
-
-async function clearAll() {
-    if(!isAuthorized) return;
-    if(confirm('⚠️ УДАЛИТЬ ВСЕ ОПЕРАЦИИ?')) { transactions=[]; await transactionsRef.set(transactions); showToast('Все данные удалены','🗑️'); }
-}
-
-function exportCSV() {
-    if(!transactions.length) { showToast('Нет данных','⚠️'); return; }
-    const h=['Дата','Сумма','Тип','Партнёр','Категория','Комментарий'];
-    const r=transactions.map(t=>[t.date,t.amount,t.type,t.partner?APP_CONFIG.PARTNERS[t.partner]?.name||t.partner:'',catLabel(t.category),`"${(t.comment||'').replace(/"/g,'""')}"`]);
-    const csv='\uFEFF'+[h.join(';')].concat(r.map(x=>x.join(';'))).join('\n');
-    const b=new Blob([csv],{type:'text/csv;charset=utf-8;'}), a=document.createElement('a');
-    a.href=URL.createObjectURL(b); a.download=`neyt_export_${new Date().toISOString().slice(0,10)}.csv`; a.click(); URL.revokeObjectURL(a.href);
-    showToast('Экспорт выполнен','📎');
-}
-
-function checkPassword() {
-    if(els.passInput.value.trim()===APP_CONFIG.PASSWORD) {
-        isAuthorized=true; document.body.classList.replace('guest-mode','auth-mode');
-        els.modal.style.display='none'; els.logoutBtn.style.display='inline-flex';
-        showToast('Режим редактирования активен','🔓'); renderUI();
-    } else { els.passError.style.display='block'; els.passInput.value=''; els.passInput.focus(); setTimeout(()=>els.passError.style.display='none',3000); }
-}
-
-function enterGuestMode() {
-    els.modal.style.display='none';
-    showToast('Режим просмотра активен','');
-    renderUI();
-}
-
-function logout() {
-    isAuthorized=false; document.body.classList.replace('auth-mode','guest-mode');
-    els.logoutBtn.style.display='none';
-    els.modal.style.display='flex';
-    showToast('Вы вышли из режима редактирования','🔐'); renderUI();
-}
-
-function initApp() {
-    database.ref('.info/connected').on('value', s=>{ els.firebaseWarning.style.display=(s.val()===true)?'none':'block'; });
-    transactionsRef.on('value', snap=>{ transactions=(snap.val()&&Array.isArray(snap.val()))?snap.val():[]; renderUI(); }, ()=>{ els.firebaseWarning.style.display='block'; });
-    
-    els.submitPass.onclick=checkPassword;
-    els.passInput.onkeypress=e=>{ if(e.key==='Enter') checkPassword(); };
-    els.guestModeBtn.onclick=enterGuestMode;
-    els.loginPromptBtn.onclick=()=>{ els.modal.style.display='flex'; };
-    els.logoutBtn.onclick=logout;
-    els.txnType.onchange=()=>{ const v=els.txnType.value; els.partnerGroup.style.display=(v==='personal'||v==='salary')?'block':'none'; els.categoryGroup.style.display=(v==='expense'||v==='personal')?'block':'none'; };
-    els.operationForm.onsubmit=addTransaction;
-    
-    document.querySelectorAll('#mainTabs .nav-link').forEach(btn=>{
-        btn.onclick=()=>{
-            document.querySelectorAll('#mainTabs .nav-link').forEach(b=>b.classList.remove('active'));
-            btn.classList.add('active');
-            const tab=btn.dataset.tab;
-            document.getElementById('panelAdd').style.display=tab==='add'?'block':'none';
-            document.getElementById('panelHistory').style.display=tab==='history'?'block':'none';
-            document.getElementById('panelAnalytics').style.display=tab==='analytics'?'block':'none';
-            if(tab==='analytics') setTimeout(()=>renderCharts(getMetrics()),50);
-        };
-    });
-    document.querySelectorAll('.filter-chip').forEach(c=>{ c.onclick=function(){ document.querySelectorAll('.filter-chip').forEach(x=>x.classList.remove('active')); this.classList.add('active'); filters.partner=this.dataset.filter; renderHistoryTable(); }; });
-    els.monthFilter.onchange=e=>{ filters.month=e.target.value; renderHistoryTable(); };
-    els.typeFilter.onchange=e=>{ filters.type=e.target.value; renderHistoryTable(); };
-    els.exportBtn.onclick=exportCSV;
-    els.clearAllBtn.onclick=clearAll;
-    document.getElementById('txnDate').valueAsDate=new Date();
-    ['pieChart','barChart','lineChart','catChart'].forEach(id=>{
-        if(document.getElementById(id)) charts[id]=new Chart(document.getElementById(id),{type:'doughnut',data:{labels:[],datasets:[{data:[]}]},options:{responsive:true,plugins:{legend:{display:false}}}});
-    });
-}
-initApp();
-</script>
-</body>
-</html>
+    return { income, expense, profit, shares, withdrawals, byCategory, balances, cashRemaining: profit - withdrawals.nastya - withdrawals.natal
