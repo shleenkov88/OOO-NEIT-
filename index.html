@@ -79,7 +79,7 @@
 
 <section class="card">
   <div class="who">
-    <div><b>Маркетплейсы</b><div class="tiny">Кто потратил, какая площадка и на что. Снимается с кассы до дележа.</div></div>
+    <div><b>Маркетплейсы</b><div class="tiny">Кто потратил — снимается с её доли, не делится на двоих.</div></div>
     <button class="chip" type="button" data-goto="market">Записать</button>
   </div>
   <div class="grid2" style="margin-top:12px">
@@ -109,6 +109,7 @@
     <div class="who"><div><b>Настя Волкова</b><div class="tiny">ВсеИнструменты.ру · 140 000 ₽</div></div><span class="pct">70%</span></div>
     <div class="bar"><i id="barNastya"></i></div>
     <div class="row"><span>Доля</span><b id="shareNastya">0 ₽</b></div>
+    <div class="row"><span>Личные расходы</span><b id="persNastya">0 ₽</b></div>
     <div class="row"><span>Выдано</span><b id="paidNastya">0 ₽</b></div>
     <div class="row"><span>Траты на МП</span><b id="mpCardNastya">0 ₽</b></div>
     <div class="row"><span>До 140к</span><b id="gapNastya">140 000 ₽</b></div>
@@ -118,6 +119,7 @@
     <div class="who"><div><b>Наташа Тейковцева</b><div class="tiny">ООО «Нейт» · 60 000 ₽</div></div><span class="pct">30%</span></div>
     <div class="bar"><i id="barNatalia"></i></div>
     <div class="row"><span>Доля</span><b id="shareNatalia">0 ₽</b></div>
+    <div class="row"><span>Личные расходы</span><b id="persNatalia">0 ₽</b></div>
     <div class="row"><span>Выдано</span><b id="paidNatalia">0 ₽</b></div>
     <div class="row"><span>Траты на МП</span><b id="mpCardNatalia">0 ₽</b></div>
     <div class="row"><span>До 60к</span><b id="gapNatalia">60 000 ₽</b></div>
@@ -147,8 +149,11 @@
       <div><label>Дата</label><input id="date" type="date" required /></div>
     </div>
     <div id="partnerWrap" style="display:none">
-      <label>Кому</label>
-      <select id="partner"><option value="nastya">Настя · 70%</option><option value="natalia">Наташа · 30%</option></select>
+      <label id="partnerLabel">Кому</label>
+      <select id="partner">
+        <option value="nastya">Настя · с её доли</option>
+        <option value="natalia">Наташа · с её доли</option>
+      </select>
     </div>
     <div><label>Комментарий</label><textarea id="comment" placeholder="Откуда перевод или за что расход"></textarea></div>
     <button class="primary" type="submit">Записать в кассу</button>
@@ -244,15 +249,25 @@
   function esc(s) { var d = document.createElement("div"); d.textContent = s == null ? "" : String(s); return d.innerHTML; }
   function title(t) {
     var bits = [LABELS[t.type] || t.type];
-    if (t.partner && NAMES[t.partner]) bits.push(NAMES[t.partner]);
+    var who = ownerOf(t);
+    if (who && NAMES[who]) bits.push(NAMES[who]);
+    else if (t.type === "expense") bits.push("общий");
     if (t.marketplace && PLACES[t.marketplace]) bits.push(PLACES[t.marketplace]);
     if (t.purpose && PURP[t.purpose]) bits.push(PURP[t.purpose]);
     return bits.join(" · ");
   }
 
+  function ownerOf(t) {
+    if (t.partner === "nastya" || t.partner === "natalia") return t.partner;
+    var c = String(t.comment || "").toLowerCase();
+    if (/наст[яие]/.test(c)) return "nastya";
+    if (/наташ/.test(c)) return "natalia";
+    return null;
+  }
   function metrics() {
-    var income = 0, fuel = 0, fuelSpend = 0, expense = 0, market = 0;
+    var income = 0, fuel = 0, fuelSpend = 0, commonExpense = 0, market = 0;
     var paid = { nastya: 0, natalia: 0 };
+    var personal = { nastya: 0, natalia: 0 };
     var byWho = { nastya: 0, natalia: 0 };
     var byPlace = { wb: 0, ozon: 0, vi: 0, other: 0 };
     var byPurp = { ads: 0, commission: 0, goods: 0, delivery: 0, pack: 0, other: 0 };
@@ -261,23 +276,34 @@
       if (t.type === "income") income += a;
       else if (t.type === "fuel") fuel += a;
       else if (t.type === "fuel_spend") fuelSpend += a;
-      else if (t.type === "expense") expense += a;
-      else if (t.type === "market") {
+      else if (t.type === "expense") {
+        var ew = ownerOf(t);
+        if (ew) personal[ew] += a; else commonExpense += a;
+      } else if (t.type === "market") {
         market += a;
-        if (byWho[t.partner] != null) byWho[t.partner] += a;
+        var mw = ownerOf(t);
+        if (mw) { personal[mw] += a; byWho[mw] += a; } else commonExpense += a;
         if (byPlace[t.marketplace] != null) byPlace[t.marketplace] += a;
         if (byPurp[t.purpose] != null) byPurp[t.purpose] += a;
       } else if ((t.type === "salary" || t.type === "personal") && paid[t.partner] != null) paid[t.partner] += a;
     }
-    var net = income - fuel - expense - market;
+    var net = income - fuel - commonExpense;
     var shares = { nastya: net * SHARE.nastya, natalia: net * SHARE.natalia };
-    return { income: income, fuel: fuel, fuelSpend: fuelSpend, card: fuel - fuelSpend, expense: expense, market: market, net: net, paid: paid, shares: shares, bal: { nastya: shares.nastya - paid.nastya, natalia: shares.natalia - paid.natalia }, cash: net - paid.nastya - paid.natalia, byWho: byWho, byPlace: byPlace, byPurp: byPurp };
+    return {
+      income: income, fuel: fuel, fuelSpend: fuelSpend, card: fuel - fuelSpend,
+      expense: personal.nastya + personal.natalia + commonExpense, market: market, net: net,
+      personal: personal, paid: paid, shares: shares,
+      bal: { nastya: shares.nastya - paid.nastya - personal.nastya, natalia: shares.natalia - paid.natalia - personal.natalia },
+      cash: net - paid.nastya - paid.natalia - personal.nastya - personal.natalia,
+      byWho: byWho, byPlace: byPlace, byPurp: byPurp
+    };
   }
 
   function setP(m, key, shareEl, paidEl, mpEl, gapEl, balEl, barEl) {
     shareEl.textContent = rub(m.shares[key]);
     paidEl.textContent = rub(m.paid[key]);
     mpEl.textContent = rub(m.byWho[key]);
+    document.getElementById(key === "nastya" ? "persNastya" : "persNatalia").textContent = rub(m.personal[key]);
     gapEl.textContent = rub(Math.max(0, TARGET[key] - m.paid[key]));
     balEl.textContent = rub(m.bal[key]);
     balEl.className = m.bal[key] >= 0 ? "ok" : "bad";
@@ -303,10 +329,9 @@
     setP(m, "nastya", shareNastya, paidNastya, mpCardNastya, gapNastya, balNastya, barNastya);
     setP(m, "natalia", shareNatalia, paidNatalia, mpCardNatalia, gapNatalia, balNatalia, barNatalia);
     var text;
-    if (!tx.length) text = "Запишите перевод. Траты на маркетплейсы — отдельный пункт: кто, площадка и на что. Это расход кассы до дележа 70/30.";
+    if (!tx.length) text = "Запишите перевод. Расход — на Настю или Наташу и снимается с её доли, не с обеих.";
     else {
-      text = "К разделу " + rub(m.net) + ": Насте " + rub(m.shares.nastya) + ", Наташе " + rub(m.shares.natalia) + ". В кассе " + rub(m.cash) + ".";
-      if (m.market) text += " На маркетплейсы ушло " + rub(m.market) + ": Настя " + rub(m.byWho.nastya) + ", Наташа " + rub(m.byWho.natalia) + ".";
+      text = "К разделу " + rub(m.net) + ": Насте " + rub(m.shares.nastya) + ", Наташе " + rub(m.shares.natalia) + ". Личные: Настя " + rub(m.personal.nastya) + ", Наташа " + rub(m.personal.natalia) + ". В кассе " + rub(m.cash) + ".";
     }
     hint.textContent = text;
     purposeGrid.innerHTML = Object.keys(PURP).map(function (k) {
@@ -381,7 +406,11 @@
   outBtn.onclick = function () { try { sessionStorage.removeItem(AUTH); } catch (e) {} lock.style.display = "flex"; pass.value = ""; };
   document.querySelectorAll("[data-goto]").forEach(function (b) { b.onclick = function () { showTab(b.getAttribute("data-goto")); }; });
   document.querySelectorAll(".tabs button").forEach(function (b) { b.onclick = function () { showTab(b.getAttribute("data-tab")); }; });
-  group("#panelAdd [data-type]", "data-type", function (v) { type = v; partnerWrap.style.display = type === "salary" ? "block" : "none"; });
+  group("#panelAdd [data-type]", "data-type", function (v) {
+    type = v;
+    partnerWrap.style.display = (type === "salary" || type === "expense") ? "block" : "none";
+    partnerLabel.textContent = type === "expense" ? "Чей расход" : "Кому зарплата";
+  });
   group("#panelFuel [data-fuel]", "data-fuel", function (v) { fuelKind = v; fuelSubmit.textContent = v === "fuel" ? "Пополнить карту" : "Списать с карты"; });
   group("#panelMarket [data-who]", "data-who", function (v) { who = v; marketSubmit.textContent = "Записать трату " + (v === "nastya" ? "Насти" : "Наташи"); });
   group("#panelMarket [data-place]", "data-place", function (v) { place = v; });
@@ -390,7 +419,7 @@
   form.onsubmit = function (e) {
     e.preventDefault();
     var amount = money(document.getElementById("amount").value); if (amount <= 0) return;
-    tx.push({ id: Date.now().toString(36) + Math.random().toString(36).slice(2, 7), date: date.value, amount: amount, type: type, comment: comment.value.trim(), partner: type === "salary" ? partner.value : null, marketplace: null, purpose: null });
+    tx.push({ id: Date.now().toString(36) + Math.random().toString(36).slice(2, 7), date: date.value, amount: amount, type: type, comment: comment.value.trim(), partner: (type === "salary" || type === "expense") ? partner.value : null, marketplace: null, purpose: null });
     document.getElementById("amount").value = ""; comment.value = ""; persist();
   };
   marketForm.onsubmit = function (e) {
