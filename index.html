@@ -4,30 +4,23 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="theme-color" content="#0a0a0b" />
-  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
-  <meta http-equiv="Pragma" content="no-cache" />
-  <title>Касса ООО «Нейт»</title>
-  <!-- v4-local-2026-09-03 offline -->
+  <title>ООО «Нейт» — касса 30/70</title>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
   <style>
-    :root {
-      --bg:#0a0a0b; --surface:#141416; --elevated:#1c1c20; --fg:#f4f4f5;
-      --muted:#a1a1aa; --subtle:#71717a; --border:#2a2a30; --accent:#d4d7de;
-      --accent-fg:#0a0a0b; --ok:#7dcea0; --bad:#e08b8b; --ink:#c8ccd4;
-    }
+    :root { --bg:#0a0a0b; --surface:#141416; --elevated:#1c1c20; --fg:#f4f4f5; --muted:#a1a1aa; --subtle:#71717a; --border:#2a2a30; --accent:#d4d7de; --accent-fg:#0a0a0b; --ok:#7dcea0; --bad:#e08b8b; --ink:#c8ccd4; }
     * { box-sizing:border-box; margin:0; padding:0; }
-    html,body { background:var(--bg); color:var(--fg); font-family:"Segoe UI",system-ui,-apple-system,sans-serif; min-height:100%; }
+    html,body { background:var(--bg); color:var(--fg); font-family:"Segoe UI",system-ui,-apple-system,sans-serif; min-height:100%; color-scheme:dark; }
     body { padding:16px 16px 80px; max-width:760px; margin:0 auto; }
-    h1 { font-size:18px; font-weight:600; letter-spacing:-0.02em; }
-    .sub { color:var(--muted); font-size:12px; margin-top:4px; line-height:1.4; }
+    h1 { font-size:18px; font-weight:600; }
+    .sub { color:var(--muted); font-size:12px; margin-top:4px; }
     .top { display:flex; justify-content:space-between; align-items:flex-start; gap:12px; margin-bottom:16px; }
-    button, input, select, textarea {
-      font:inherit; color:var(--fg); background:var(--elevated);
-      border:1px solid var(--border); border-radius:12px;
-    }
+    button, input, select, textarea { font:inherit; color:var(--fg); background:var(--elevated); border:1px solid var(--border); border-radius:12px; }
     button { cursor:pointer; min-height:44px; }
     .chip { padding:8px 14px; font-size:13px; background:var(--surface); }
-    .grid4,.grid2 { display:grid; gap:10px; }
+    .grid4,.grid2,.grid3 { display:grid; gap:10px; }
     .grid4 { grid-template-columns:1fr 1fr; }
+    .grid3 { grid-template-columns:1fr 1fr 1fr; }
     .card { background:var(--surface); border:1px solid var(--border); border-radius:20px; padding:14px; }
     .label { font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); font-weight:600; }
     .val { font-size:20px; font-weight:600; margin-top:4px; font-variant-numeric:tabular-nums; }
@@ -44,11 +37,11 @@
     label { font-size:12px; color:var(--muted); font-weight:600; display:block; margin-bottom:6px; }
     input, select, textarea { width:100%; padding:12px 14px; min-height:44px; }
     textarea { min-height:72px; }
-    .ops { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
-    .op { padding:12px 8px; text-align:left; font-size:13px; font-weight:600; background:var(--surface); }
+    .ops { display:grid; grid-template-columns:1fr; gap:8px; }
+    .op { padding:12px; text-align:left; font-size:13px; font-weight:600; background:var(--surface); }
     .op.on { outline:1px solid var(--ink); background:var(--elevated); }
     .primary { background:var(--accent); color:var(--accent-fg); font-weight:600; border:0; }
-    .tabs { display:flex; gap:8px; margin:16px 0 12px; }
+    .tabs { display:flex; flex-wrap:wrap; gap:8px; margin:16px 0 12px; }
     .tabs button { padding:8px 14px; border-radius:999px; font-size:13px; background:var(--surface); }
     .tabs button.on { background:var(--elevated); outline:1px solid var(--ink); }
     .modal { position:fixed; inset:0; background:rgba(0,0,0,.82); display:flex; align-items:center; justify-content:center; padding:20px; z-index:20; }
@@ -56,36 +49,49 @@
     .del { background:none; border:0; color:var(--bad); min-height:auto; font-size:13px; padding:8px; }
     ul { list-style:none; }
     li { border-top:1px solid var(--border); padding:12px 0; display:flex; justify-content:space-between; gap:12px; }
-    @media (min-width:720px) { .grid4 { grid-template-columns:repeat(4,1fr); } .grid2 { grid-template-columns:1fr 1fr; } }
+    .warn { display:none; background:rgba(224,139,139,.12); color:#e08b8b; padding:10px 12px; border-radius:12px; margin-bottom:12px; font-size:13px; }
+    .mini { background:var(--elevated); border-radius:12px; padding:10px; }
+    @media (min-width:720px) { .grid4 { grid-template-columns:repeat(4,1fr); } .grid2 { grid-template-columns:1fr 1fr; } .ops { grid-template-columns:1fr 1fr 1fr; } }
   </style>
 </head>
 <body>
-<div id="lock" class="modal">
-  <div class="box">
-    <p class="label">ООО «Нейт»</p>
-    <h1 style="font-size:24px;margin:8px 0">Касса партнёров</h1>
-    <p class="tiny">Настя 70% / 140 000 · Наташа 30% / 60 000. Работает без Google и без облака — всё на этом телефоне.</p>
-    <label style="margin-top:16px" for="pass">Пароль</label>
-    <input id="pass" type="password" inputmode="numeric" autocomplete="off" placeholder="••••" />
-    <p id="passErr" class="tiny bad" style="display:none;margin-top:8px">Неверный пароль</p>
-    <button class="primary" id="enter" type="button" style="width:100%;margin-top:12px">Войти</button>
-  </div>
-</div>
+<div id="lock" class="modal"><div class="box">
+  <p class="label">ООО «Нейт»</p>
+  <h1 style="font-size:24px;margin:8px 0">Касса партнёров</h1>
+  <p class="tiny">Настя 70% / 140 000 · Наташа 30% / 60 000. Топливная карта отдельно.</p>
+  <label style="margin-top:16px" for="pass">Пароль</label>
+  <input id="pass" type="password" inputmode="numeric" autocomplete="off" placeholder="••••" />
+  <p id="passErr" class="tiny bad" style="display:none;margin-top:8px">Неверный пароль</p>
+  <button class="primary" id="enter" type="button" style="width:100%;margin-top:12px">Войти</button>
+</div></div>
 
 <header class="top">
   <div>
     <h1>Касса ООО «Нейт»</h1>
-    <div class="sub">70 / 30 · топливо отдельно · без облака</div>
+    <div class="sub">70 / 30 · топливная карта отдельно</div>
   </div>
   <button class="chip" id="outBtn" type="button">Выйти</button>
 </header>
+<div id="fbWarn" class="warn">Нет связи с облаком. Пишу в память телефона.</div>
 
 <div class="grid4" style="margin-bottom:12px">
   <div class="card"><div class="label">Пришло</div><div class="val" id="sIncome">0 ₽</div></div>
-  <div class="card"><div class="label">Топливо</div><div class="val" id="sFuel">0 ₽</div></div>
   <div class="card"><div class="label">Расходы</div><div class="val" id="sExp">0 ₽</div></div>
   <div class="card"><div class="label">К разделу</div><div class="val" id="sNet">0 ₽</div></div>
+  <div class="card"><div class="label">В кассе</div><div class="val" id="sCash">0 ₽</div></div>
 </div>
+
+<section class="card" style="margin-bottom:12px">
+  <div class="who">
+    <div><b>Топливная карта</b><div class="tiny">Пополнение снимает с кассы до дележа зарплаты. Списание с карты на зп не влияет.</div></div>
+    <button class="chip" type="button" id="openFuel">Открыть</button>
+  </div>
+  <div class="grid3" style="margin-top:12px">
+    <div class="mini"><div class="label">Пополнено</div><div class="val" id="sFuelIn" style="font-size:16px">0 ₽</div></div>
+    <div class="mini"><div class="label">Потрачено</div><div class="val" id="sFuelOut" style="font-size:16px">0 ₽</div></div>
+    <div class="mini"><div class="label">На карте</div><div class="val" id="sCard" style="font-size:16px">0 ₽</div></div>
+  </div>
+</section>
 
 <div class="grid2">
   <section class="card">
@@ -108,17 +114,17 @@
 
 <div class="hint" id="hint"></div>
 <div class="tabs">
-  <button class="on" data-tab="add" type="button">Новая операция</button>
+  <button class="on" data-tab="add" type="button">Касса</button>
+  <button data-tab="fuel" type="button">Топливная карта</button>
   <button data-tab="log" type="button">История</button>
 </div>
 
 <section id="panelAdd" class="card">
   <form id="form">
     <div>
-      <label>Что произошло</label>
+      <label>Операция по кассе</label>
       <div class="ops">
         <button type="button" class="op on" data-type="income">Пришёл перевод</button>
-        <button type="button" class="op" data-type="fuel">На топливную карту</button>
         <button type="button" class="op" data-type="expense">Прочий расход</button>
         <button type="button" class="op" data-type="salary">Выдали зарплату</button>
       </div>
@@ -134,9 +140,30 @@
         <option value="natalia">Наташа · 30% · 60 000</option>
       </select>
     </div>
-    <div><label for="comment">Комментарий</label><textarea id="comment" placeholder="Откуда перевод или какая заправка"></textarea></div>
-    <button class="primary" type="submit">Записать</button>
+    <div><label for="comment">Комментарий</label><textarea id="comment" placeholder="Откуда перевод или за что расход"></textarea></div>
+    <button class="primary" type="submit">Записать в кассу</button>
   </form>
+</section>
+
+<section id="panelFuel" class="card" style="display:none">
+  <form id="fuelForm">
+    <label>Топливная карта</label>
+    <div class="ops" style="grid-template-columns:1fr 1fr">
+      <button type="button" class="op on" data-fuel="fuel">Пополнить карту<div class="tiny">Снимает с кассы до 70/30</div></button>
+      <button type="button" class="op" data-fuel="fuel_spend">Списать с карты<div class="tiny">На зарплату не влияет</div></button>
+    </div>
+    <div class="grid2">
+      <div><label for="fuelAmount">Сумма, ₽</label><input id="fuelAmount" type="number" min="1" step="1" required inputmode="numeric" /></div>
+      <div><label for="fuelDate">Дата</label><input id="fuelDate" type="date" required /></div>
+    </div>
+    <div><label for="fuelComment">Комментарий</label><textarea id="fuelComment" placeholder="Заправка, рейс, пополнение"></textarea></div>
+    <button class="primary" type="submit" id="fuelSubmit">Пополнить карту</button>
+  </form>
+  <div style="margin-top:16px">
+    <div class="label">Движения по карте</div>
+    <ul id="fuelList"></ul>
+    <p id="fuelEmpty" class="tiny" style="padding:12px 0">Пока пусто</p>
+  </div>
 </section>
 
 <section id="panelLog" class="card" style="display:none">
@@ -156,46 +183,35 @@
   var TARGET = { nastya: 140000, natalia: 60000 };
   var SHARE = { nastya: 0.7, natalia: 0.3 };
   var NAMES = { nastya: "Настя", natalia: "Наташа" };
-  var LABELS = { income: "перевод", fuel: "топливо", expense: "расход", salary: "зарплата", personal: "изъятие" };
-
+  var LABELS = { income: "перевод", fuel: "пополнение карты", fuel_spend: "списание с карты", expense: "расход", salary: "зарплата", personal: "изъятие" };
+  var firebaseConfig = { apiKey: "AIzaSyCSME5fUFOS6R80-2-wEgOyAUyJx1M0a1A", authDomain: "neit-41882.firebaseapp.com", projectId: "neit-41882", storageBucket: "neit-41882.firebasestorage.app", messagingSenderId: "478613249008", appId: "1:478613249008:web:42f214670ccc00a4935b35", databaseURL: "https://neit-41882-default-rtdb.europe-west1.firebasedatabase.app/" };
+  firebase.initializeApp(firebaseConfig);
+  var db = firebase.database();
+  var ref = db.ref("transactions");
   var tx = [];
   var type = "income";
+  var fuelKind = "fuel";
 
-  function rub(n) {
-    return new Intl.NumberFormat("ru-RU", { style: "currency", currency: "RUB", maximumFractionDigits: 0 }).format(Math.round(n || 0));
-  }
+  function rub(n) { return new Intl.NumberFormat("ru-RU", { style: "currency", currency: "RUB", maximumFractionDigits: 0 }).format(Math.round(n || 0)); }
   function money(n) { return Math.round(Number(n) || 0); }
-  function esc(s) {
-    var d = document.createElement("div");
-    d.textContent = s == null ? "" : String(s);
-    return d.innerHTML;
-  }
-
-  function load() {
-    try {
-      var raw = JSON.parse(localStorage.getItem(KEY) || "[]");
-      tx = Array.isArray(raw) ? raw : [];
-    } catch (e) { tx = []; }
-  }
-  function save() {
-    try { localStorage.setItem(KEY, JSON.stringify(tx)); } catch (e) {}
-  }
+  function esc(s) { var d = document.createElement("div"); d.textContent = s == null ? "" : String(s); return d.innerHTML; }
 
   function metrics() {
-    var income = 0, fuel = 0, expense = 0;
+    var income = 0, fuel = 0, fuelSpend = 0, expense = 0;
     var paid = { nastya: 0, natalia: 0 };
     for (var i = 0; i < tx.length; i++) {
       var t = tx[i];
       var a = money(t.amount);
       if (t.type === "income") income += a;
       else if (t.type === "fuel") fuel += a;
+      else if (t.type === "fuel_spend") fuelSpend += a;
       else if (t.type === "expense") expense += a;
       else if ((t.type === "salary" || t.type === "personal") && paid[t.partner] != null) paid[t.partner] += a;
     }
     var net = income - fuel - expense;
     var shares = { nastya: net * SHARE.nastya, natalia: net * SHARE.natalia };
     var bal = { nastya: shares.nastya - paid.nastya, natalia: shares.natalia - paid.natalia };
-    return { income: income, fuel: fuel, expense: expense, net: net, paid: paid, shares: shares, bal: bal, cash: net - paid.nastya - paid.natalia };
+    return { income: income, fuel: fuel, fuelSpend: fuelSpend, card: fuel - fuelSpend, expense: expense, net: net, paid: paid, shares: shares, bal: bal, cash: net - paid.nastya - paid.natalia };
   }
 
   function setP(m, key, shareEl, paidEl, gapEl, balEl, barEl) {
@@ -209,21 +225,44 @@
 
   function render() {
     var m = metrics();
-    document.getElementById("sIncome").textContent = rub(m.income);
-    document.getElementById("sFuel").textContent = rub(m.fuel);
-    document.getElementById("sExp").textContent = rub(m.expense);
-    document.getElementById("sNet").textContent = rub(m.net);
+    sIncome.textContent = rub(m.income);
+    sExp.textContent = rub(m.expense);
+    sNet.textContent = rub(m.net);
+    sCash.textContent = rub(m.cash);
+    sFuelIn.textContent = rub(m.fuel);
+    sFuelOut.textContent = rub(m.fuelSpend);
+    sCard.textContent = rub(m.card);
+    sCard.className = "val " + (m.card < 0 ? "bad" : "ok");
+    sCard.style.fontSize = "16px";
     setP(m, "nastya", shareNastya, paidNastya, gapNastya, balNastya, barNastya);
     setP(m, "natalia", shareNatalia, paidNatalia, gapNatalia, balNatalia, barNatalia);
     var text;
-    if (!tx.length) {
-      text = "Запишите перевод, когда деньги пришли. Топливо на карту — не зарплата, его вычитаем до дележа 70/30.";
-    } else {
-      text = "После топлива и расходов к разделу " + rub(m.net) + ": Насте " + rub(m.shares.nastya) + ", Наташе " + rub(m.shares.natalia) + ". В кассе " + rub(m.cash) + ".";
+    if (!tx.length) text = "Запишите перевод. Топливная карта — отдельный пункт: пополнение уходит с кассы до 70/30, списание с карты на зарплату не влияет.";
+    else {
+      text = "К разделу " + rub(m.net) + ": Насте " + rub(m.shares.nastya) + ", Наташе " + rub(m.shares.natalia) + ". В кассе " + rub(m.cash) + ". На карте " + rub(m.card) + ".";
       text += " До целей: Насте " + rub(Math.max(0, TARGET.nastya - m.paid.nastya)) + ", Наташе " + rub(Math.max(0, TARGET.natalia - m.paid.natalia)) + ".";
     }
-    document.getElementById("hint").textContent = text;
+    hint.textContent = text;
     renderLog();
+    renderFuel();
+  }
+
+  function rowHtml(t) {
+    var who = t.partner ? (NAMES[t.partner] || "") : "";
+    var sign = (t.type === "income" || t.type === "fuel") ? "+" : "−";
+    return '<li><div><div>' + sign + rub(t.amount) + '</div><div class="tiny">' + esc(t.date) + " · " + esc(LABELS[t.type] || t.type) + (who ? " · " + esc(who) : "") + "</div>" + (t.comment ? '<div class="tiny">' + esc(t.comment) + "</div>" : "") + '</div><button class="del" type="button" data-id="' + esc(t.id) + '">Удалить</button></li>';
+  }
+
+  function bindDel(root) {
+    var dels = root.querySelectorAll(".del");
+    for (var j = 0; j < dels.length; j++) {
+      dels[j].onclick = function () {
+        if (!confirm("Удалить запись?")) return;
+        var id = this.getAttribute("data-id");
+        tx = tx.filter(function (t) { return t.id !== id; });
+        persist();
+      };
+    }
   }
 
   function renderLog() {
@@ -242,97 +281,108 @@
     monthFilter.innerHTML = '<option value="all">Все месяцы</option>' + months.map(function (mo) {
       return '<option value="' + esc(mo) + '"' + (mo === month ? " selected" : "") + ">" + esc(mo) + "</option>";
     }).join("");
-    list.innerHTML = rows.map(function (t) {
-      var who = t.partner ? (NAMES[t.partner] || "") : "";
-      var sign = t.type === "income" ? "+" : "−";
-      return '<li><div><div>' + sign + rub(t.amount) + '</div><div class="tiny">' + esc(t.date) + " · " + esc(LABELS[t.type] || t.type) + (who ? " · " + esc(who) : "") + "</div>" + (t.comment ? '<div class="tiny">' + esc(t.comment) + "</div>" : "") + '</div><button class="del" type="button" data-id="' + esc(t.id) + '">Удалить</button></li>';
-    }).join("");
+    list.innerHTML = rows.map(rowHtml).join("");
     empty.style.display = rows.length ? "none" : "block";
-    var dels = list.querySelectorAll(".del");
-    for (var j = 0; j < dels.length; j++) {
-      dels[j].onclick = function () {
-        if (!confirm("Удалить запись?")) return;
-        var id = this.getAttribute("data-id");
-        tx = tx.filter(function (t) { return t.id !== id; });
-        save();
-        render();
-      };
-    }
+    bindDel(list);
   }
 
-  function unlock() { document.getElementById("lock").style.display = "none"; }
+  function renderFuel() {
+    var rows = tx.filter(function (t) { return t.type === "fuel" || t.type === "fuel_spend"; });
+    rows.sort(function (a, b) { return String(b.date || "").localeCompare(String(a.date || "")); });
+    fuelList.innerHTML = rows.map(rowHtml).join("");
+    fuelEmpty.style.display = rows.length ? "none" : "block";
+    bindDel(fuelList);
+  }
+
+  function persist() {
+    try { localStorage.setItem(KEY, JSON.stringify(tx)); } catch (e) {}
+    try { ref.set(tx); } catch (e) { fbWarn.style.display = "block"; }
+    render();
+  }
+
+  function showTab(tab) {
+    var tabs = document.querySelectorAll(".tabs button");
+    for (var x = 0; x < tabs.length; x++) tabs[x].classList.toggle("on", tabs[x].getAttribute("data-tab") === tab);
+    panelAdd.style.display = tab === "add" ? "block" : "none";
+    panelFuel.style.display = tab === "fuel" ? "block" : "none";
+    panelLog.style.display = tab === "log" ? "block" : "none";
+  }
+
+  function unlock() { lock.style.display = "none"; }
   function relock() {
     try { sessionStorage.removeItem(AUTH); } catch (e) {}
-    document.getElementById("lock").style.display = "flex";
-    document.getElementById("pass").value = "";
+    lock.style.display = "flex";
+    pass.value = "";
   }
 
-  document.getElementById("enter").onclick = function () {
-    var pass = document.getElementById("pass");
-    var passErr = document.getElementById("passErr");
-    if (String(pass.value).trim() === PIN) {
-      try { sessionStorage.setItem(AUTH, "1"); } catch (e) {}
-      passErr.style.display = "none";
-      unlock();
-    } else {
-      passErr.style.display = "block";
-    }
+  enter.onclick = function () {
+    if (String(pass.value).trim() === PIN) { try { sessionStorage.setItem(AUTH, "1"); } catch (e) {} passErr.style.display = "none"; unlock(); }
+    else passErr.style.display = "block";
   };
-  document.getElementById("pass").onkeydown = function (e) {
-    if (e.key === "Enter") document.getElementById("enter").click();
-  };
-  document.getElementById("outBtn").onclick = relock;
+  pass.onkeydown = function (e) { if (e.key === "Enter") enter.click(); };
+  outBtn.onclick = relock;
+  openFuel.onclick = function () { showTab("fuel"); };
 
-  var ops = document.querySelectorAll(".op");
+  var ops = document.querySelectorAll("#panelAdd .op");
   for (var o = 0; o < ops.length; o++) {
     ops[o].onclick = function () {
       type = this.getAttribute("data-type");
       for (var x = 0; x < ops.length; x++) ops[x].classList.toggle("on", ops[x] === this);
-      document.getElementById("partnerWrap").style.display = type === "salary" ? "block" : "none";
+      partnerWrap.style.display = type === "salary" ? "block" : "none";
+    };
+  }
+  var fops = document.querySelectorAll("#panelFuel [data-fuel]");
+  for (var f = 0; f < fops.length; f++) {
+    fops[f].onclick = function () {
+      fuelKind = this.getAttribute("data-fuel");
+      for (var x = 0; x < fops.length; x++) fops[x].classList.toggle("on", fops[x] === this);
+      fuelSubmit.textContent = fuelKind === "fuel" ? "Пополнить карту" : "Списать с карты";
     };
   }
   var tabs = document.querySelectorAll(".tabs button");
-  for (var tb = 0; tb < tabs.length; tb++) {
-    tabs[tb].onclick = function () {
-      for (var x = 0; x < tabs.length; x++) tabs[x].classList.toggle("on", tabs[x] === this);
-      var tab = this.getAttribute("data-tab");
-      document.getElementById("panelAdd").style.display = tab === "add" ? "block" : "none";
-      document.getElementById("panelLog").style.display = tab === "log" ? "block" : "none";
-    };
-  }
+  for (var tb = 0; tb < tabs.length; tb++) tabs[tb].onclick = function () { showTab(this.getAttribute("data-tab")); };
 
-  document.getElementById("form").onsubmit = function (e) {
+  form.onsubmit = function (e) {
     e.preventDefault();
     var amount = money(document.getElementById("amount").value);
     if (amount <= 0) return;
-    tx.push({
-      id: Date.now().toString(36) + Math.random().toString(36).slice(2, 7),
-      date: document.getElementById("date").value,
-      amount: amount,
-      type: type,
-      comment: document.getElementById("comment").value.trim(),
-      partner: type === "salary" ? document.getElementById("partner").value : null
-    });
+    tx.push({ id: Date.now().toString(36) + Math.random().toString(36).slice(2, 7), date: document.getElementById("date").value, amount: amount, type: type, comment: document.getElementById("comment").value.trim(), partner: type === "salary" ? partner.value : null });
     document.getElementById("amount").value = "";
     document.getElementById("comment").value = "";
-    save();
-    render();
+    persist();
   };
-
-  document.getElementById("exportBtn").onclick = function () {
+  fuelForm.onsubmit = function (e) {
+    e.preventDefault();
+    var amount = money(fuelAmount.value);
+    if (amount <= 0) return;
+    tx.push({ id: Date.now().toString(36) + Math.random().toString(36).slice(2, 7), date: fuelDate.value, amount: amount, type: fuelKind, comment: fuelComment.value.trim(), partner: null, category: "logistics" });
+    fuelAmount.value = "";
+    fuelComment.value = "";
+    persist();
+  };
+  exportBtn.onclick = function () {
     var head = "Дата;Сумма;Тип;Партнёр;Комментарий";
-    var rows = tx.map(function (t) {
-      return [t.date, t.amount, LABELS[t.type] || t.type, NAMES[t.partner] || "", '"' + String(t.comment || "").replace(/"/g, '""') + '"'].join(";");
-    });
+    var rows = tx.map(function (t) { return [t.date, t.amount, LABELS[t.type] || t.type, NAMES[t.partner] || "", '"' + String(t.comment || "").replace(/"/g, '""') + '"'].join(";"); });
     var a = document.createElement("a");
     a.href = URL.createObjectURL(new Blob(["\uFEFF" + [head].concat(rows).join("\n")], { type: "text/csv;charset=utf-8;" }));
     a.download = "neit-kassa.csv";
     a.click();
   };
-  document.getElementById("monthFilter").onchange = renderLog;
+  monthFilter.onchange = renderLog;
   document.getElementById("date").valueAsDate = new Date();
+  fuelDate.valueAsDate = new Date();
 
-  load();
+  try {
+    var local = JSON.parse(localStorage.getItem(KEY) || "[]");
+    if (Array.isArray(local) && local.length) tx = local;
+  } catch (e) {}
+  db.ref(".info/connected").on("value", function (s) { fbWarn.style.display = s.val() === true ? "none" : "block"; });
+  ref.on("value", function (snap) {
+    var val = snap.val();
+    if (Array.isArray(val)) tx = val;
+    else if (val && typeof val === "object") tx = Object.values(val);
+    render();
+  }, function () { fbWarn.style.display = "block"; render(); });
   render();
   try { if (sessionStorage.getItem(AUTH) === "1") unlock(); } catch (e) {}
 })();
