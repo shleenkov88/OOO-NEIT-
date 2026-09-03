@@ -1,1 +1,178 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#0B0E14" />
+  <title>ООО «Нейт» — касса 30/70</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+  <style>
+    :root { --bg:#0B0E14; --bg2:#12161F; --bg3:#181D28; --line:rgba(255,255,255,.08); --text:#F3F5FA; --muted:#9AA3B8; --nastya:#C084FC; --natalia:#FBBF24; --green:#34D399; --red:#FB7185; --blue:#7DD3FC; --fuel:#FB923C; --radius:20px; }
+    * { box-sizing:border-box; margin:0; padding:0; }
+    html,body { background:var(--bg); color:var(--text); font-family:Manrope,system-ui,sans-serif; }
+    body { padding:16px 16px 120px; max-width:760px; margin:0 auto; }
+    h1 { font-size:18px; font-weight:800; }
+    .sub { color:var(--muted); font-size:13px; margin-top:2px; }
+    .top { display:flex; justify-content:space-between; align-items:flex-start; gap:12px; margin-bottom:18px; }
+    .brand { display:flex; gap:12px; align-items:center; }
+    .logo { width:44px; height:44px; border-radius:14px; background:linear-gradient(135deg,#7C3AED,#F472B6); display:grid; place-items:center; font-size:20px; }
+    .chip { border:1px solid var(--line); background:var(--bg2); color:var(--text); border-radius:999px; padding:8px 12px; font-size:12px; font-weight:700; cursor:pointer; }
+    .grid4,.grid2 { display:grid; gap:10px; }
+    .grid4 { grid-template-columns:1fr 1fr; }
+    .card { background:var(--bg2); border:1px solid var(--line); border-radius:var(--radius); padding:14px; }
+    .label { font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); font-weight:700; }
+    .val { font-size:22px; font-weight:800; margin-top:4px; }
+    .tiny { font-size:12px; color:var(--muted); margin-top:4px; }
+    .partner { display:flex; flex-direction:column; gap:10px; }
+    .who { display:flex; justify-content:space-between; align-items:center; }
+    .pct { font-size:12px; font-weight:800; padding:4px 8px; border-radius:999px; }
+    .pct-n { background:rgba(192,132,252,.18); color:var(--nastya); }
+    .pct-t { background:rgba(251,191,36,.18); color:var(--natalia); }
+    .bar { height:8px; background:#1E2430; border-radius:99px; overflow:hidden; }
+    .bar>i { display:block; height:100%; }
+    .row { display:flex; justify-content:space-between; font-size:13px; padding:6px 0; border-bottom:1px solid var(--line); }
+    .row:last-child { border-bottom:0; }
+    .ok { color:var(--green); } .bad { color:var(--red); }
+    .hint { margin:14px 0; padding:14px; border-radius:16px; background:linear-gradient(135deg,rgba(124,58,237,.16),rgba(52,211,153,.08)); border:1px solid rgba(192,132,252,.25); font-size:14px; line-height:1.45; }
+    form { display:grid; gap:10px; }
+    label { font-size:12px; color:var(--muted); font-weight:700; display:block; margin-bottom:6px; }
+    input,select,textarea,button.primary { width:100%; border-radius:14px; border:1px solid #2A3140; background:#0E121A; color:var(--text); padding:12px 14px; font:inherit; }
+    textarea { min-height:70px; }
+    .ops { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+    .op { border:1px solid var(--line); background:var(--bg3); border-radius:14px; padding:10px 8px; text-align:center; font-size:13px; font-weight:700; cursor:pointer; }
+    .op.on { outline:2px solid #A78BFA; background:#1B1530; }
+    button.primary { background:linear-gradient(95deg,#34D399,#10B981); color:#062016; font-weight:800; border:0; cursor:pointer; }
+    .tabs { display:flex; gap:8px; margin:18px 0 12px; }
+    .tabs button { border:1px solid var(--line); background:var(--bg2); color:var(--muted); border-radius:999px; padding:8px 14px; font-weight:700; font-size:13px; cursor:pointer; }
+    .tabs button.on { background:#2A1744; color:#fff; border-color:#7C3AED; }
+    table { width:100%; border-collapse:collapse; font-size:13px; }
+    th { text-align:left; color:var(--muted); font-size:11px; padding:8px 6px; }
+    td { padding:10px 6px; border-top:1px solid var(--line); vertical-align:top; }
+    .del { background:none; border:0; color:var(--red); cursor:pointer; font-size:16px; }
+    .guest { background:rgba(125,211,252,.1); color:#BAE6FD; border:1px solid rgba(125,211,252,.25); padding:10px 12px; border-radius:12px; margin-bottom:12px; font-size:13px; }
+    .modal { position:fixed; inset:0; background:rgba(0,0,0,.78); display:flex; align-items:center; justify-content:center; padding:20px; z-index:20; }
+    .modal .box { background:var(--bg2); border:1px solid #7C3AED; border-radius:24px; padding:24px; width:min(400px,100%); }
+    .warn { display:none; background:rgba(251,113,133,.12); color:#FECDD3; padding:10px 12px; border-radius:12px; margin-bottom:12px; font-size:13px; }
+    @media (min-width:720px) { .grid4 { grid-template-columns:repeat(4,1fr); } .grid2 { grid-template-columns:1fr 1fr; } }
+  </style>
+</head>
+<body>
+  <div id="lock" class="modal"><div class="box">
+    <h1>ООО «Нейт»</h1>
+    <p class="sub" style="margin:8px 0 16px">Касса партнёров</p>
+    <input id="pass" type="password" placeholder="Пароль" />
+    <button class="primary" id="enter" style="margin-top:10px">Войти и считать</button>
+    <p id="passErr" class="tiny bad" style="display:none;margin-top:8px">Неверный пароль</p>
+    <button class="chip" id="guestBtn" style="width:100%;margin-top:12px">Только смотреть</button>
+  </div></div>
+  <header class="top"><div class="brand"><div class="logo">🧵</div><div><h1>Касса ООО «Нейт»</h1><div class="sub">Настя 70% · Наташа 30% · топливная карта отдельно</div></div></div><button class="chip" id="outBtn" style="display:none">Выйти</button></header>
+  <div id="fbWarn" class="warn">Нет связи с облаком</div>
+  <div id="guestNote" class="guest" style="display:none">Режим просмотра</div>
+  <div class="grid4" style="margin-bottom:12px">
+    <div class="card"><div class="label">Пришло</div><div class="val" id="sIncome" style="color:var(--green)">0 ₽</div></div>
+    <div class="card"><div class="label">Топливо</div><div class="val" id="sFuel" style="color:var(--fuel)">0 ₽</div></div>
+    <div class="card"><div class="label">Прочие расходы</div><div class="val" id="sExp" style="color:var(--red)">0 ₽</div></div>
+    <div class="card"><div class="label">К разделу</div><div class="val" id="sNet" style="color:var(--blue)">0 ₽</div></div>
+  </div>
+  <div class="grid2">
+    <section class="card partner"><div class="who"><div><b>Настя Волкова</b><div class="tiny">ВсеИнструменты.ру · цель 140 000 ₽</div></div><span class="pct pct-n">70%</span></div><div class="bar"><i id="barNastya" style="width:0;background:var(--nastya)"></i></div><div class="row"><span>Доля</span><b id="shareNastya">0 ₽</b></div><div class="row"><span>Выдано</span><b id="paidNastya">0 ₽</b></div><div class="row"><span>До 140к</span><b id="gapNastya">140 000 ₽</b></div><div class="row"><span>Остаток</span><b id="balNastya">0 ₽</b></div></section>
+    <section class="card partner"><div class="who"><div><b>Наташа Тейковцева</b><div class="tiny">ООО «Нейт» · цель 60 000 ₽</div></div><span class="pct pct-t">30%</span></div><div class="bar"><i id="barNatalia" style="width:0;background:var(--natalia)"></i></div><div class="row"><span>Доля</span><b id="shareNatalia">0 ₽</b></div><div class="row"><span>Выдано</span><b id="paidNatalia">0 ₽</b></div><div class="row"><span>До 60к</span><b id="gapNatalia">60 000 ₽</b></div><div class="row"><span>Остаток</span><b id="balNatalia">0 ₽</b></div></section>
+  </div>
+  <div class="hint" id="hint">Запишите перевод. Топливо на карту — не зарплата.</div>
+  <div class="tabs"><button class="on" data-tab="add">Новая операция</button><button data-tab="log">История</button></div>
+  <section id="panelAdd" class="card"><form id="form">
+    <div><label>Что произошло</label><div class="ops">
+      <button type="button" class="op on" data-type="income">Пришёл перевод</button>
+      <button type="button" class="op" data-type="fuel">На топливную карту</button>
+      <button type="button" class="op" data-type="expense">Прочий расход</button>
+      <button type="button" class="op" data-type="salary">Выдали зарплату</button>
+    </div></div>
+    <div class="grid2"><div><label>Сумма, ₽</label><input id="amount" type="number" min="1" step="1" required placeholder="0" inputmode="numeric" /></div><div><label>Дата</label><input id="date" type="date" required /></div></div>
+    <div id="partnerWrap" style="display:none"><label>Кому зарплата</label><select id="partner"><option value="nastya">Настя 70% / 140к</option><option value="natalia">Наташа 30% / 60к</option></select></div>
+    <div><label>Комментарий</label><textarea id="comment" placeholder="Откуда перевод или заправка"></textarea></div>
+    <button class="primary">Записать</button>
+  </form></section>
+  <section id="panelLog" class="card" style="display:none">
+    <div style="display:flex;gap:8px;margin-bottom:10px"><select id="monthFilter"><option value="all">Все месяцы</option></select><button class="chip" id="exportBtn">CSV</button></div>
+    <div style="overflow:auto"><table><thead><tr><th>Дата</th><th>Сумма</th><th>Тип</th><th>Кто</th><th></th></tr></thead><tbody id="tbody"></tbody></table></div>
+    <p id="empty" class="tiny" style="padding:16px 0;display:none">Операций нет</p>
+  </section>
+<script>
 const PASSWORD = "1234";
+const TARGET = { nastya: 140000, natalia: 60000 };
+const SHARE = { nastya: 0.7, natalia: 0.3 };
+const NAMES = { nastya: "Настя", natalia: "Наташа" };
+const firebaseConfig = { apiKey: "AIzaSyCSME5fUFOS6R80-2-wEgOyAUyJx1M0a1A", authDomain: "neit-41882.firebaseapp.com", projectId: "neit-41882", storageBucket: "neit-41882.firebasestorage.app", messagingSenderId: "478613249008", appId: "1:478613249008:web:42f214670ccc00a4935b35", databaseURL: "https://neit-41882-default-rtdb.europe-west1.firebasedatabase.app/" };
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+const ref = db.ref("transactions");
+let tx = []; let auth = false; let type = "income";
+const rub = n => new Intl.NumberFormat("ru-RU", { style: "currency", currency: "RUB", maximumFractionDigits: 0 }).format(n || 0);
+const money = n => Math.round(Number(n) || 0);
+function metrics() {
+  let income = 0, fuel = 0, expense = 0;
+  const paid = { nastya: 0, natalia: 0 };
+  for (const t of tx) {
+    const a = money(t.amount);
+    if (t.type === "income") income += a;
+    else if (t.type === "fuel") fuel += a;
+    else if (t.type === "expense") expense += a;
+    else if ((t.type === "salary" || t.type === "personal") && paid[t.partner] !== undefined) paid[t.partner] += a;
+  }
+  const net = income - fuel - expense;
+  const shares = { nastya: net * SHARE.nastya, natalia: net * SHARE.natalia };
+  const bal = { nastya: shares.nastya - paid.nastya, natalia: shares.natalia - paid.natalia };
+  return { income, fuel, expense, net, paid, shares, bal, cash: net - paid.nastya - paid.natalia };
+}
+function render() {
+  const m = metrics();
+  sIncome.textContent = rub(m.income); sFuel.textContent = rub(m.fuel); sExp.textContent = rub(m.expense); sNet.textContent = rub(m.net);
+  const setP = (key, shareEl, paidEl, gapEl, balEl, barEl) => {
+    shareEl.textContent = rub(m.shares[key]); paidEl.textContent = rub(m.paid[key]);
+    gapEl.textContent = rub(Math.max(0, TARGET[key] - m.paid[key]));
+    balEl.textContent = rub(m.bal[key]); balEl.className = m.bal[key] >= 0 ? "ok" : "bad";
+    barEl.style.width = Math.min(100, (m.paid[key] / TARGET[key]) * 100) + "%";
+  };
+  setP("nastya", shareNastya, paidNastya, gapNastya, balNastya, barNastya);
+  setP("natalia", shareNatalia, paidNatalia, gapNatalia, balNatalia, barNatalia);
+  let text = !tx.length ? "Запишите перевод. Топливо на карту — не зарплата." : `К разделу ${rub(m.net)}: Насте ${rub(m.shares.nastya)}, Наташе ${rub(m.shares.natalia)}. В кассе ${rub(m.cash)}.`;
+  if (tx.length && (m.paid.nastya < TARGET.nastya || m.paid.natalia < TARGET.natalia)) text += ` До зп: Насте ${rub(Math.max(0, TARGET.nastya - m.paid.nastya))}, Наташе ${rub(Math.max(0, TARGET.natalia - m.paid.natalia))}.`;
+  hint.textContent = text; renderLog();
+}
+function typeLabel(t) { return { income:"перевод", fuel:"топливо", expense:"расход", salary:"зарплата", personal:"изъятие" }[t] || t; }
+function renderLog() {
+  const month = monthFilter.value;
+  const rows = [...tx].filter(t => month === "all" || (t.date || "").startsWith(month)).sort((a,b)=>(b.date||"").localeCompare(a.date||""));
+  const months = [...new Set(tx.map(t => (t.date||"").slice(0,7)).filter(Boolean))].sort().reverse();
+  monthFilter.innerHTML = `<option value="all">Все месяцы</option>` + months.map(m => `<option value="${m}" ${m===month?"selected":""}>${m}</option>`).join("");
+  tbody.innerHTML = rows.map(t => `<tr><td>${t.date||"—"}<div class="tiny">${t.comment||""}</div></td><td>${t.type==="income"?"+":"−"}${rub(t.amount)}</td><td>${typeLabel(t.type)}</td><td>${t.partner?NAMES[t.partner]:"—"}</td><td>${auth?`<button class="del" data-id="${t.id}">×</button>`:""}</td></tr>`).join("");
+  empty.style.display = rows.length ? "none" : "block";
+  tbody.querySelectorAll(".del").forEach(btn => btn.onclick = async () => { if (!confirm("Удалить?")) return; tx = tx.filter(t => t.id !== btn.dataset.id); await persist(); });
+}
+async function persist() { try { await ref.set(tx); localStorage.setItem("neit-tx", JSON.stringify(tx)); } catch { localStorage.setItem("neit-tx", JSON.stringify(tx)); fbWarn.style.display = "block"; } render(); }
+form.onsubmit = async (e) => {
+  e.preventDefault(); if (!auth) { lock.style.display = "flex"; return; }
+  const amount = money(document.getElementById("amount").value); if (amount <= 0) return;
+  tx.push({ id: Date.now().toString(36)+Math.random().toString(36).slice(2,7), date: document.getElementById("date").value, amount, type, comment: document.getElementById("comment").value.trim(), category: type==="fuel"?"logistics":(type==="expense"?"other":null), partner: type==="salary"?document.getElementById("partner").value:null });
+  document.getElementById("amount").value = ""; document.getElementById("comment").value = ""; await persist();
+};
+function setType(next) { type = next; document.querySelectorAll(".op").forEach(b => b.classList.toggle("on", b.dataset.type === next)); partnerWrap.style.display = next === "salary" ? "block" : "none"; }
+document.querySelectorAll(".op").forEach(b => b.onclick = () => setType(b.dataset.type));
+document.querySelectorAll(".tabs button").forEach(b => b.onclick = () => { document.querySelectorAll(".tabs button").forEach(x => x.classList.toggle("on", x === b)); panelAdd.style.display = b.dataset.tab === "add" ? "block" : "none"; panelLog.style.display = b.dataset.tab === "log" ? "block" : "none"; });
+enter.onclick = () => { if (pass.value.trim() === PASSWORD) { auth = true; lock.style.display = "none"; outBtn.style.display = "inline-flex"; guestNote.style.display = "none"; } else passErr.style.display = "block"; };
+pass.onkeydown = e => { if (e.key === "Enter") enter.click(); };
+guestBtn.onclick = () => { lock.style.display = "none"; guestNote.style.display = "block"; };
+outBtn.onclick = () => { auth = false; lock.style.display = "flex"; outBtn.style.display = "none"; };
+exportBtn.onclick = () => { const head = "Дата;Сумма;Тип;Партнёр;Комментарий"; const rows = tx.map(t => [t.date, t.amount, typeLabel(t.type), NAMES[t.partner] || "", `"${(t.comment||"").replace(/"/g,'""')}"`].join(";")); const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob(["\uFEFF"+[head,...rows].join("\n")], {type:"text/csv;charset=utf-8;"})); a.download = "neit-kassa.csv"; a.click(); };
+monthFilter.onchange = renderLog;
+document.getElementById("date").valueAsDate = new Date();
+try { const local = JSON.parse(localStorage.getItem("neit-tx") || "[]"); if (Array.isArray(local) && local.length) tx = local; } catch {}
+db.ref(".info/connected").on("value", s => { fbWarn.style.display = s.val() === true ? "none" : "block"; });
+ref.on("value", snap => { const val = snap.val(); if (Array.isArray(val)) tx = val; else if (val && typeof val === "object") tx = Object.values(val); render(); }, () => { fbWarn.style.display = "block"; render(); });
+render();
+</script>
+</body>
+</html>
