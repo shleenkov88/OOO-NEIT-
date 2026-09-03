@@ -8,40 +8,39 @@
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
   <style>
-    :root { --bg:#0a0a0b; --surface:#141416; --elevated:#1c1c20; --fg:#f4f4f5; --muted:#a1a1aa; --subtle:#71717a; --border:#2a2a30; --accent:#d4d7de; --accent-fg:#0a0a0b; --ok:#7dcea0; --bad:#e08b8b; --ink:#c8ccd4; }
+    :root { --bg:#0a0a0b; --surface:#141416; --elevated:#1c1c20; --fg:#f4f4f5; --muted:#a1a1aa; --border:#2a2a30; --accent:#d4d7de; --accent-fg:#0a0a0b; --ok:#7dcea0; --bad:#e08b8b; --ink:#c8ccd4; }
     * { box-sizing:border-box; margin:0; padding:0; }
-    html,body { background:var(--bg); color:var(--fg); font-family:"Segoe UI",system-ui,-apple-system,sans-serif; min-height:100%; color-scheme:dark; }
+    html,body { background:var(--bg); color:var(--fg); font-family:"Segoe UI",system-ui,sans-serif; min-height:100%; color-scheme:dark; }
     body { padding:16px 16px 80px; max-width:760px; margin:0 auto; }
     h1 { font-size:18px; font-weight:600; }
-    .sub { color:var(--muted); font-size:12px; margin-top:4px; }
-    .top { display:flex; justify-content:space-between; align-items:flex-start; gap:12px; margin-bottom:16px; }
-    button, input, select, textarea { font:inherit; color:var(--fg); background:var(--elevated); border:1px solid var(--border); border-radius:12px; }
+    .sub,.tiny { color:var(--muted); font-size:12px; margin-top:4px; line-height:1.4; }
+    .top { display:flex; justify-content:space-between; gap:12px; margin-bottom:16px; }
+    button,input,select,textarea { font:inherit; color:var(--fg); background:var(--elevated); border:1px solid var(--border); border-radius:12px; }
     button { cursor:pointer; min-height:44px; }
     .chip { padding:8px 14px; font-size:13px; background:var(--surface); }
     .grid4,.grid2,.grid3 { display:grid; gap:10px; }
-    .grid4 { grid-template-columns:1fr 1fr; }
+    .grid4,.grid2 { grid-template-columns:1fr 1fr; }
     .grid3 { grid-template-columns:1fr 1fr 1fr; }
-    .card { background:var(--surface); border:1px solid var(--border); border-radius:20px; padding:14px; }
+    .card { background:var(--surface); border:1px solid var(--border); border-radius:20px; padding:14px; margin-bottom:12px; }
     .label { font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); font-weight:600; }
-    .val { font-size:20px; font-weight:600; margin-top:4px; font-variant-numeric:tabular-nums; }
-    .tiny { font-size:12px; color:var(--muted); margin-top:4px; line-height:1.4; }
-    .who { display:flex; justify-content:space-between; align-items:flex-start; gap:8px; }
+    .val { font-size:18px; font-weight:600; margin-top:4px; font-variant-numeric:tabular-nums; }
+    .who { display:flex; justify-content:space-between; gap:8px; }
     .pct { font-size:12px; padding:4px 8px; border-radius:999px; border:1px solid var(--border); color:var(--muted); }
     .bar { height:6px; background:var(--elevated); border-radius:99px; overflow:hidden; margin:10px 0; }
     .bar>i { display:block; height:100%; background:var(--ink); width:0; }
     .row { display:flex; justify-content:space-between; font-size:13px; padding:6px 0; border-bottom:1px solid var(--border); gap:8px; }
     .row:last-child { border-bottom:0; }
     .ok { color:var(--ok); } .bad { color:var(--bad); }
-    .hint { margin:14px 0; padding:14px; border-radius:16px; border:1px solid var(--border); background:var(--surface); font-size:14px; line-height:1.5; }
+    .hint { margin:4px 0 14px; padding:14px; border-radius:16px; border:1px solid var(--border); background:var(--surface); font-size:14px; line-height:1.5; }
     form { display:grid; gap:12px; }
     label { font-size:12px; color:var(--muted); font-weight:600; display:block; margin-bottom:6px; }
-    input, select, textarea { width:100%; padding:12px 14px; min-height:44px; }
+    input,select,textarea { width:100%; padding:12px 14px; min-height:44px; }
     textarea { min-height:72px; }
-    .ops { display:grid; grid-template-columns:1fr; gap:8px; }
-    .op { padding:12px; text-align:left; font-size:13px; font-weight:600; background:var(--surface); }
+    .ops { display:flex; flex-wrap:wrap; gap:8px; }
+    .op { padding:10px 12px; font-size:13px; font-weight:600; background:var(--surface); min-height:40px; }
     .op.on { outline:1px solid var(--ink); background:var(--elevated); }
     .primary { background:var(--accent); color:var(--accent-fg); font-weight:600; border:0; }
-    .tabs { display:flex; flex-wrap:wrap; gap:8px; margin:16px 0 12px; }
+    .tabs { display:flex; flex-wrap:wrap; gap:8px; margin:8px 0 12px; }
     .tabs button { padding:8px 14px; border-radius:999px; font-size:13px; background:var(--surface); }
     .tabs button.on { background:var(--elevated); outline:1px solid var(--ink); }
     .modal { position:fixed; inset:0; background:rgba(0,0,0,.82); display:flex; align-items:center; justify-content:center; padding:20px; z-index:20; }
@@ -51,14 +50,14 @@
     li { border-top:1px solid var(--border); padding:12px 0; display:flex; justify-content:space-between; gap:12px; }
     .warn { display:none; background:rgba(224,139,139,.12); color:#e08b8b; padding:10px 12px; border-radius:12px; margin-bottom:12px; font-size:13px; }
     .mini { background:var(--elevated); border-radius:12px; padding:10px; }
-    @media (min-width:720px) { .grid4 { grid-template-columns:repeat(4,1fr); } .grid2 { grid-template-columns:1fr 1fr; } .ops { grid-template-columns:1fr 1fr 1fr; } }
+    @media (min-width:720px) { .grid4 { grid-template-columns:repeat(4,1fr); } }
   </style>
 </head>
 <body>
 <div id="lock" class="modal"><div class="box">
   <p class="label">ООО «Нейт»</p>
   <h1 style="font-size:24px;margin:8px 0">Касса партнёров</h1>
-  <p class="tiny">Настя 70% / 140 000 · Наташа 30% / 60 000. Топливная карта отдельно.</p>
+  <p class="tiny">Настя 70% · Наташа 30%. Топливо и маркетплейсы отдельно: видно, кто и на что тратит.</p>
   <label style="margin-top:16px" for="pass">Пароль</label>
   <input id="pass" type="password" inputmode="numeric" autocomplete="off" placeholder="••••" />
   <p id="passErr" class="tiny bad" style="display:none;margin-top:8px">Неверный пароль</p>
@@ -66,47 +65,61 @@
 </div></div>
 
 <header class="top">
-  <div>
-    <h1>Касса ООО «Нейт»</h1>
-    <div class="sub">70 / 30 · топливная карта отдельно</div>
-  </div>
+  <div><h1>Касса ООО «Нейт»</h1><div class="sub">70 / 30 · топливо · маркетплейсы</div></div>
   <button class="chip" id="outBtn" type="button">Выйти</button>
 </header>
 <div id="fbWarn" class="warn">Нет связи с облаком. Пишу в память телефона.</div>
 
-<div class="grid4" style="margin-bottom:12px">
+<div class="grid4">
   <div class="card"><div class="label">Пришло</div><div class="val" id="sIncome">0 ₽</div></div>
-  <div class="card"><div class="label">Расходы</div><div class="val" id="sExp">0 ₽</div></div>
+  <div class="card"><div class="label">Маркетплейсы</div><div class="val" id="sMarket">0 ₽</div></div>
   <div class="card"><div class="label">К разделу</div><div class="val" id="sNet">0 ₽</div></div>
   <div class="card"><div class="label">В кассе</div><div class="val" id="sCash">0 ₽</div></div>
 </div>
 
-<section class="card" style="margin-bottom:12px">
+<section class="card">
   <div class="who">
-    <div><b>Топливная карта</b><div class="tiny">Пополнение снимает с кассы до дележа зарплаты. Списание с карты на зп не влияет.</div></div>
-    <button class="chip" type="button" id="openFuel">Открыть</button>
+    <div><b>Маркетплейсы</b><div class="tiny">Кто потратил, какая площадка и на что. Снимается с кассы до дележа.</div></div>
+    <button class="chip" type="button" data-goto="market">Записать</button>
+  </div>
+  <div class="grid2" style="margin-top:12px">
+    <div class="mini"><div class="label">Настя потратила</div><div class="val" id="mpNastya">0 ₽</div></div>
+    <div class="mini"><div class="label">Наташа потратила</div><div class="val" id="mpNatalia">0 ₽</div></div>
+    <div class="mini"><div class="label">Wildberries</div><div class="val" id="mpWb">0 ₽</div></div>
+    <div class="mini"><div class="label">Ozon</div><div class="val" id="mpOzon">0 ₽</div></div>
+    <div class="mini"><div class="label">ВсеИнструменты.ру</div><div class="val" id="mpVi">0 ₽</div></div>
+    <div class="mini"><div class="label">Другой МП</div><div class="val" id="mpOther">0 ₽</div></div>
+  </div>
+</section>
+
+<section class="card">
+  <div class="who">
+    <div><b>Топливная карта</b><div class="tiny">Пополнение снимает с кассы. Списание с карты на зп не влияет.</div></div>
+    <button class="chip" type="button" data-goto="fuel">Открыть</button>
   </div>
   <div class="grid3" style="margin-top:12px">
-    <div class="mini"><div class="label">Пополнено</div><div class="val" id="sFuelIn" style="font-size:16px">0 ₽</div></div>
-    <div class="mini"><div class="label">Потрачено</div><div class="val" id="sFuelOut" style="font-size:16px">0 ₽</div></div>
-    <div class="mini"><div class="label">На карте</div><div class="val" id="sCard" style="font-size:16px">0 ₽</div></div>
+    <div class="mini"><div class="label">Пополнено</div><div class="val" id="sFuelIn">0 ₽</div></div>
+    <div class="mini"><div class="label">Потрачено</div><div class="val" id="sFuelOut">0 ₽</div></div>
+    <div class="mini"><div class="label">На карте</div><div class="val" id="sCard">0 ₽</div></div>
   </div>
 </section>
 
 <div class="grid2">
   <section class="card">
-    <div class="who"><div><b>Настя Волкова</b><div class="tiny">ВсеИнструменты.ру · цель 140 000 ₽</div></div><span class="pct">70%</span></div>
+    <div class="who"><div><b>Настя Волкова</b><div class="tiny">ВсеИнструменты.ру · 140 000 ₽</div></div><span class="pct">70%</span></div>
     <div class="bar"><i id="barNastya"></i></div>
     <div class="row"><span>Доля</span><b id="shareNastya">0 ₽</b></div>
     <div class="row"><span>Выдано</span><b id="paidNastya">0 ₽</b></div>
+    <div class="row"><span>Траты на МП</span><b id="mpCardNastya">0 ₽</b></div>
     <div class="row"><span>До 140к</span><b id="gapNastya">140 000 ₽</b></div>
     <div class="row"><span>Остаток</span><b id="balNastya">0 ₽</b></div>
   </section>
   <section class="card">
-    <div class="who"><div><b>Наташа Тейковцева</b><div class="tiny">ООО «Нейт» · цель 60 000 ₽</div></div><span class="pct">30%</span></div>
+    <div class="who"><div><b>Наташа Тейковцева</b><div class="tiny">ООО «Нейт» · 60 000 ₽</div></div><span class="pct">30%</span></div>
     <div class="bar"><i id="barNatalia"></i></div>
     <div class="row"><span>Доля</span><b id="shareNatalia">0 ₽</b></div>
     <div class="row"><span>Выдано</span><b id="paidNatalia">0 ₽</b></div>
+    <div class="row"><span>Траты на МП</span><b id="mpCardNatalia">0 ₽</b></div>
     <div class="row"><span>До 60к</span><b id="gapNatalia">60 000 ₽</b></div>
     <div class="row"><span>Остаток</span><b id="balNatalia">0 ₽</b></div>
   </section>
@@ -115,14 +128,14 @@
 <div class="hint" id="hint"></div>
 <div class="tabs">
   <button class="on" data-tab="add" type="button">Касса</button>
-  <button data-tab="fuel" type="button">Топливная карта</button>
+  <button data-tab="market" type="button">Маркетплейсы</button>
+  <button data-tab="fuel" type="button">Топливо</button>
   <button data-tab="log" type="button">История</button>
 </div>
 
 <section id="panelAdd" class="card">
   <form id="form">
-    <div>
-      <label>Операция по кассе</label>
+    <div><label>Операция по кассе</label>
       <div class="ops">
         <button type="button" class="op on" data-type="income">Пришёл перевод</button>
         <button type="button" class="op" data-type="expense">Прочий расход</button>
@@ -130,40 +143,75 @@
       </div>
     </div>
     <div class="grid2">
-      <div><label for="amount">Сумма, ₽</label><input id="amount" type="number" min="1" step="1" required inputmode="numeric" /></div>
-      <div><label for="date">Дата</label><input id="date" type="date" required /></div>
+      <div><label>Сумма, ₽</label><input id="amount" type="number" min="1" required inputmode="numeric" /></div>
+      <div><label>Дата</label><input id="date" type="date" required /></div>
     </div>
     <div id="partnerWrap" style="display:none">
-      <label for="partner">Кому</label>
-      <select id="partner">
-        <option value="nastya">Настя · 70% · 140 000</option>
-        <option value="natalia">Наташа · 30% · 60 000</option>
-      </select>
+      <label>Кому</label>
+      <select id="partner"><option value="nastya">Настя · 70%</option><option value="natalia">Наташа · 30%</option></select>
     </div>
-    <div><label for="comment">Комментарий</label><textarea id="comment" placeholder="Откуда перевод или за что расход"></textarea></div>
+    <div><label>Комментарий</label><textarea id="comment" placeholder="Откуда перевод или за что расход"></textarea></div>
     <button class="primary" type="submit">Записать в кассу</button>
   </form>
 </section>
 
+<section id="panelMarket" class="card" style="display:none">
+  <form id="marketForm">
+    <div><label>Кто тратит</label>
+      <div class="ops">
+        <button type="button" class="op on" data-who="nastya">Настя</button>
+        <button type="button" class="op" data-who="natalia">Наташа</button>
+      </div>
+    </div>
+    <div><label>Площадка</label>
+      <div class="ops">
+        <button type="button" class="op on" data-place="wb">Wildberries</button>
+        <button type="button" class="op" data-place="ozon">Ozon</button>
+        <button type="button" class="op" data-place="vi">ВсеИнструменты.ру</button>
+        <button type="button" class="op" data-place="other">Другой МП</button>
+      </div>
+    </div>
+    <div><label>На что</label>
+      <div class="ops">
+        <button type="button" class="op on" data-purpose="ads">Реклама</button>
+        <button type="button" class="op" data-purpose="commission">Комиссия</button>
+        <button type="button" class="op" data-purpose="goods">Товар / закупка</button>
+        <button type="button" class="op" data-purpose="delivery">Доставка</button>
+        <button type="button" class="op" data-purpose="pack">Упаковка</button>
+        <button type="button" class="op" data-purpose="other">Прочее</button>
+      </div>
+    </div>
+    <div class="grid2">
+      <div><label>Сумма, ₽</label><input id="marketAmount" type="number" min="1" required inputmode="numeric" /></div>
+      <div><label>Дата</label><input id="marketDate" type="date" required /></div>
+    </div>
+    <div><label>Подробнее</label><textarea id="marketComment" placeholder="Кабинет, артикул, рекламная кампания"></textarea></div>
+    <button class="primary" type="submit" id="marketSubmit">Записать трату Насти</button>
+  </form>
+  <div style="margin-top:16px">
+    <div class="label">На что ушло</div>
+    <div class="grid2" style="margin:10px 0 16px" id="purposeGrid"></div>
+    <div class="label">Кто и на что</div>
+    <ul id="marketList"></ul>
+    <p id="marketEmpty" class="tiny" style="padding:12px 0">Пока нет трат</p>
+  </div>
+</section>
+
 <section id="panelFuel" class="card" style="display:none">
   <form id="fuelForm">
-    <label>Топливная карта</label>
-    <div class="ops" style="grid-template-columns:1fr 1fr">
+    <div class="ops">
       <button type="button" class="op on" data-fuel="fuel">Пополнить карту<div class="tiny">Снимает с кассы до 70/30</div></button>
       <button type="button" class="op" data-fuel="fuel_spend">Списать с карты<div class="tiny">На зарплату не влияет</div></button>
     </div>
     <div class="grid2">
-      <div><label for="fuelAmount">Сумма, ₽</label><input id="fuelAmount" type="number" min="1" step="1" required inputmode="numeric" /></div>
-      <div><label for="fuelDate">Дата</label><input id="fuelDate" type="date" required /></div>
+      <div><label>Сумма, ₽</label><input id="fuelAmount" type="number" min="1" required inputmode="numeric" /></div>
+      <div><label>Дата</label><input id="fuelDate" type="date" required /></div>
     </div>
-    <div><label for="fuelComment">Комментарий</label><textarea id="fuelComment" placeholder="Заправка, рейс, пополнение"></textarea></div>
+    <div><label>Комментарий</label><textarea id="fuelComment" placeholder="Заправка, рейс"></textarea></div>
     <button class="primary" type="submit" id="fuelSubmit">Пополнить карту</button>
   </form>
-  <div style="margin-top:16px">
-    <div class="label">Движения по карте</div>
-    <ul id="fuelList"></ul>
-    <p id="fuelEmpty" class="tiny" style="padding:12px 0">Пока пусто</p>
-  </div>
+  <ul id="fuelList"></ul>
+  <p id="fuelEmpty" class="tiny" style="padding:12px 0">Пока пусто</p>
 </section>
 
 <section id="panelLog" class="card" style="display:none">
@@ -183,40 +231,53 @@
   var TARGET = { nastya: 140000, natalia: 60000 };
   var SHARE = { nastya: 0.7, natalia: 0.3 };
   var NAMES = { nastya: "Настя", natalia: "Наташа" };
-  var LABELS = { income: "перевод", fuel: "пополнение карты", fuel_spend: "списание с карты", expense: "расход", salary: "зарплата", personal: "изъятие" };
-  var firebaseConfig = { apiKey: "AIzaSyCSME5fUFOS6R80-2-wEgOyAUyJx1M0a1A", authDomain: "neit-41882.firebaseapp.com", projectId: "neit-41882", storageBucket: "neit-41882.firebasestorage.app", messagingSenderId: "478613249008", appId: "1:478613249008:web:42f214670ccc00a4935b35", databaseURL: "https://neit-41882-default-rtdb.europe-west1.firebasedatabase.app/" };
-  firebase.initializeApp(firebaseConfig);
-  var db = firebase.database();
-  var ref = db.ref("transactions");
+  var PLACES = { wb: "Wildberries", ozon: "Ozon", vi: "ВсеИнструменты.ру", other: "Другой МП" };
+  var PURP = { ads: "Реклама", commission: "Комиссия", goods: "Товар / закупка", delivery: "Доставка", pack: "Упаковка", other: "Прочее" };
+  var LABELS = { income: "перевод", fuel: "пополнение карты", fuel_spend: "списание с карты", expense: "расход", market: "маркетплейс", salary: "зарплата", personal: "изъятие" };
+  firebase.initializeApp({ apiKey: "AIzaSyCSME5fUFOS6R80-2-wEgOyAUyJx1M0a1A", authDomain: "neit-41882.firebaseapp.com", projectId: "neit-41882", storageBucket: "neit-41882.firebasestorage.app", messagingSenderId: "478613249008", appId: "1:478613249008:web:42f214670ccc00a4935b35", databaseURL: "https://neit-41882-default-rtdb.europe-west1.firebasedatabase.app/" });
+  var ref = firebase.database().ref("transactions");
   var tx = [];
-  var type = "income";
-  var fuelKind = "fuel";
+  var type = "income", fuelKind = "fuel", who = "nastya", place = "wb", purpose = "ads";
 
   function rub(n) { return new Intl.NumberFormat("ru-RU", { style: "currency", currency: "RUB", maximumFractionDigits: 0 }).format(Math.round(n || 0)); }
   function money(n) { return Math.round(Number(n) || 0); }
   function esc(s) { var d = document.createElement("div"); d.textContent = s == null ? "" : String(s); return d.innerHTML; }
+  function title(t) {
+    var bits = [LABELS[t.type] || t.type];
+    if (t.partner && NAMES[t.partner]) bits.push(NAMES[t.partner]);
+    if (t.marketplace && PLACES[t.marketplace]) bits.push(PLACES[t.marketplace]);
+    if (t.purpose && PURP[t.purpose]) bits.push(PURP[t.purpose]);
+    return bits.join(" · ");
+  }
 
   function metrics() {
-    var income = 0, fuel = 0, fuelSpend = 0, expense = 0;
+    var income = 0, fuel = 0, fuelSpend = 0, expense = 0, market = 0;
     var paid = { nastya: 0, natalia: 0 };
+    var byWho = { nastya: 0, natalia: 0 };
+    var byPlace = { wb: 0, ozon: 0, vi: 0, other: 0 };
+    var byPurp = { ads: 0, commission: 0, goods: 0, delivery: 0, pack: 0, other: 0 };
     for (var i = 0; i < tx.length; i++) {
-      var t = tx[i];
-      var a = money(t.amount);
+      var t = tx[i], a = money(t.amount);
       if (t.type === "income") income += a;
       else if (t.type === "fuel") fuel += a;
       else if (t.type === "fuel_spend") fuelSpend += a;
       else if (t.type === "expense") expense += a;
-      else if ((t.type === "salary" || t.type === "personal") && paid[t.partner] != null) paid[t.partner] += a;
+      else if (t.type === "market") {
+        market += a;
+        if (byWho[t.partner] != null) byWho[t.partner] += a;
+        if (byPlace[t.marketplace] != null) byPlace[t.marketplace] += a;
+        if (byPurp[t.purpose] != null) byPurp[t.purpose] += a;
+      } else if ((t.type === "salary" || t.type === "personal") && paid[t.partner] != null) paid[t.partner] += a;
     }
-    var net = income - fuel - expense;
+    var net = income - fuel - expense - market;
     var shares = { nastya: net * SHARE.nastya, natalia: net * SHARE.natalia };
-    var bal = { nastya: shares.nastya - paid.nastya, natalia: shares.natalia - paid.natalia };
-    return { income: income, fuel: fuel, fuelSpend: fuelSpend, card: fuel - fuelSpend, expense: expense, net: net, paid: paid, shares: shares, bal: bal, cash: net - paid.nastya - paid.natalia };
+    return { income: income, fuel: fuel, fuelSpend: fuelSpend, card: fuel - fuelSpend, expense: expense, market: market, net: net, paid: paid, shares: shares, bal: { nastya: shares.nastya - paid.nastya, natalia: shares.natalia - paid.natalia }, cash: net - paid.nastya - paid.natalia, byWho: byWho, byPlace: byPlace, byPurp: byPurp };
   }
 
-  function setP(m, key, shareEl, paidEl, gapEl, balEl, barEl) {
+  function setP(m, key, shareEl, paidEl, mpEl, gapEl, balEl, barEl) {
     shareEl.textContent = rub(m.shares[key]);
     paidEl.textContent = rub(m.paid[key]);
+    mpEl.textContent = rub(m.byWho[key]);
     gapEl.textContent = rub(Math.max(0, TARGET[key] - m.paid[key]));
     balEl.textContent = rub(m.bal[key]);
     balEl.className = m.bal[key] >= 0 ? "ok" : "bad";
@@ -226,52 +287,56 @@
   function render() {
     var m = metrics();
     sIncome.textContent = rub(m.income);
-    sExp.textContent = rub(m.expense);
+    sMarket.textContent = rub(m.market);
     sNet.textContent = rub(m.net);
     sCash.textContent = rub(m.cash);
+    mpNastya.textContent = rub(m.byWho.nastya);
+    mpNatalia.textContent = rub(m.byWho.natalia);
+    mpWb.textContent = rub(m.byPlace.wb);
+    mpOzon.textContent = rub(m.byPlace.ozon);
+    mpVi.textContent = rub(m.byPlace.vi);
+    mpOther.textContent = rub(m.byPlace.other);
     sFuelIn.textContent = rub(m.fuel);
     sFuelOut.textContent = rub(m.fuelSpend);
     sCard.textContent = rub(m.card);
     sCard.className = "val " + (m.card < 0 ? "bad" : "ok");
-    sCard.style.fontSize = "16px";
-    setP(m, "nastya", shareNastya, paidNastya, gapNastya, balNastya, barNastya);
-    setP(m, "natalia", shareNatalia, paidNatalia, gapNatalia, balNatalia, barNatalia);
+    setP(m, "nastya", shareNastya, paidNastya, mpCardNastya, gapNastya, balNastya, barNastya);
+    setP(m, "natalia", shareNatalia, paidNatalia, mpCardNatalia, gapNatalia, balNatalia, barNatalia);
     var text;
-    if (!tx.length) text = "Запишите перевод. Топливная карта — отдельный пункт: пополнение уходит с кассы до 70/30, списание с карты на зарплату не влияет.";
+    if (!tx.length) text = "Запишите перевод. Траты на маркетплейсы — отдельный пункт: кто, площадка и на что. Это расход кассы до дележа 70/30.";
     else {
-      text = "К разделу " + rub(m.net) + ": Насте " + rub(m.shares.nastya) + ", Наташе " + rub(m.shares.natalia) + ". В кассе " + rub(m.cash) + ". На карте " + rub(m.card) + ".";
-      text += " До целей: Насте " + rub(Math.max(0, TARGET.nastya - m.paid.nastya)) + ", Наташе " + rub(Math.max(0, TARGET.natalia - m.paid.natalia)) + ".";
+      text = "К разделу " + rub(m.net) + ": Насте " + rub(m.shares.nastya) + ", Наташе " + rub(m.shares.natalia) + ". В кассе " + rub(m.cash) + ".";
+      if (m.market) text += " На маркетплейсы ушло " + rub(m.market) + ": Настя " + rub(m.byWho.nastya) + ", Наташа " + rub(m.byWho.natalia) + ".";
     }
     hint.textContent = text;
-    renderLog();
-    renderFuel();
+    purposeGrid.innerHTML = Object.keys(PURP).map(function (k) {
+      return '<div class="mini"><div class="label">' + esc(PURP[k]) + '</div><div class="val">' + rub(m.byPurp[k]) + "</div></div>";
+    }).join("");
+    renderLists();
   }
 
   function rowHtml(t) {
-    var who = t.partner ? (NAMES[t.partner] || "") : "";
     var sign = (t.type === "income" || t.type === "fuel") ? "+" : "−";
-    return '<li><div><div>' + sign + rub(t.amount) + '</div><div class="tiny">' + esc(t.date) + " · " + esc(LABELS[t.type] || t.type) + (who ? " · " + esc(who) : "") + "</div>" + (t.comment ? '<div class="tiny">' + esc(t.comment) + "</div>" : "") + '</div><button class="del" type="button" data-id="' + esc(t.id) + '">Удалить</button></li>';
+    return '<li><div><div>' + sign + rub(t.amount) + '</div><div class="tiny">' + esc(t.date) + " · " + esc(title(t)) + "</div>" + (t.comment ? '<div class="tiny">' + esc(t.comment) + "</div>" : "") + '</div><button class="del" type="button" data-id="' + esc(t.id) + '">Удалить</button></li>';
   }
-
   function bindDel(root) {
     var dels = root.querySelectorAll(".del");
-    for (var j = 0; j < dels.length; j++) {
-      dels[j].onclick = function () {
-        if (!confirm("Удалить запись?")) return;
-        var id = this.getAttribute("data-id");
-        tx = tx.filter(function (t) { return t.id !== id; });
-        persist();
-      };
-    }
+    for (var j = 0; j < dels.length; j++) dels[j].onclick = function () {
+      if (!confirm("Удалить запись?")) return;
+      var id = this.getAttribute("data-id");
+      tx = tx.filter(function (t) { return t.id !== id; });
+      persist();
+    };
   }
-
-  function renderLog() {
-    var monthFilter = document.getElementById("monthFilter");
-    var list = document.getElementById("list");
-    var empty = document.getElementById("empty");
+  function fill(list, empty, rows) {
+    list.innerHTML = rows.map(rowHtml).join("");
+    empty.style.display = rows.length ? "none" : "block";
+    bindDel(list);
+  }
+  function renderLists() {
     var month = monthFilter.value;
-    var rows = tx.filter(function (t) { return month === "all" || (t.date || "").indexOf(month) === 0; });
-    rows.sort(function (a, b) { return String(b.date || "").localeCompare(String(a.date || "")); });
+    var all = tx.filter(function (t) { return month === "all" || (t.date || "").indexOf(month) === 0; });
+    all.sort(function (a, b) { return String(b.date || "").localeCompare(String(a.date || "")); });
     var months = [];
     for (var i = 0; i < tx.length; i++) {
       var mo = (tx[i].date || "").slice(0, 7);
@@ -281,17 +346,9 @@
     monthFilter.innerHTML = '<option value="all">Все месяцы</option>' + months.map(function (mo) {
       return '<option value="' + esc(mo) + '"' + (mo === month ? " selected" : "") + ">" + esc(mo) + "</option>";
     }).join("");
-    list.innerHTML = rows.map(rowHtml).join("");
-    empty.style.display = rows.length ? "none" : "block";
-    bindDel(list);
-  }
-
-  function renderFuel() {
-    var rows = tx.filter(function (t) { return t.type === "fuel" || t.type === "fuel_spend"; });
-    rows.sort(function (a, b) { return String(b.date || "").localeCompare(String(a.date || "")); });
-    fuelList.innerHTML = rows.map(rowHtml).join("");
-    fuelEmpty.style.display = rows.length ? "none" : "block";
-    bindDel(fuelList);
+    fill(list, empty, all);
+    fill(marketList, marketEmpty, tx.filter(function (t) { return t.type === "market"; }).sort(function (a, b) { return String(b.date || "").localeCompare(String(a.date || "")); }));
+    fill(fuelList, fuelEmpty, tx.filter(function (t) { return t.type === "fuel" || t.type === "fuel_spend"; }).sort(function (a, b) { return String(b.date || "").localeCompare(String(a.date || "")); }));
   }
 
   function persist() {
@@ -299,84 +356,66 @@
     try { ref.set(tx); } catch (e) { fbWarn.style.display = "block"; }
     render();
   }
-
   function showTab(tab) {
     var tabs = document.querySelectorAll(".tabs button");
     for (var x = 0; x < tabs.length; x++) tabs[x].classList.toggle("on", tabs[x].getAttribute("data-tab") === tab);
     panelAdd.style.display = tab === "add" ? "block" : "none";
+    panelMarket.style.display = tab === "market" ? "block" : "none";
     panelFuel.style.display = tab === "fuel" ? "block" : "none";
     panelLog.style.display = tab === "log" ? "block" : "none";
   }
-
-  function unlock() { lock.style.display = "none"; }
-  function relock() {
-    try { sessionStorage.removeItem(AUTH); } catch (e) {}
-    lock.style.display = "flex";
-    pass.value = "";
+  function group(sel, attr, setter, extra) {
+    var btns = document.querySelectorAll(sel);
+    for (var i = 0; i < btns.length; i++) btns[i].onclick = function () {
+      setter(this.getAttribute(attr));
+      for (var x = 0; x < btns.length; x++) btns[x].classList.toggle("on", btns[x] === this);
+      if (extra) extra();
+    };
   }
 
   enter.onclick = function () {
-    if (String(pass.value).trim() === PIN) { try { sessionStorage.setItem(AUTH, "1"); } catch (e) {} passErr.style.display = "none"; unlock(); }
+    if (String(pass.value).trim() === PIN) { try { sessionStorage.setItem(AUTH, "1"); } catch (e) {} passErr.style.display = "none"; lock.style.display = "none"; }
     else passErr.style.display = "block";
   };
   pass.onkeydown = function (e) { if (e.key === "Enter") enter.click(); };
-  outBtn.onclick = relock;
-  openFuel.onclick = function () { showTab("fuel"); };
-
-  var ops = document.querySelectorAll("#panelAdd .op");
-  for (var o = 0; o < ops.length; o++) {
-    ops[o].onclick = function () {
-      type = this.getAttribute("data-type");
-      for (var x = 0; x < ops.length; x++) ops[x].classList.toggle("on", ops[x] === this);
-      partnerWrap.style.display = type === "salary" ? "block" : "none";
-    };
-  }
-  var fops = document.querySelectorAll("#panelFuel [data-fuel]");
-  for (var f = 0; f < fops.length; f++) {
-    fops[f].onclick = function () {
-      fuelKind = this.getAttribute("data-fuel");
-      for (var x = 0; x < fops.length; x++) fops[x].classList.toggle("on", fops[x] === this);
-      fuelSubmit.textContent = fuelKind === "fuel" ? "Пополнить карту" : "Списать с карты";
-    };
-  }
-  var tabs = document.querySelectorAll(".tabs button");
-  for (var tb = 0; tb < tabs.length; tb++) tabs[tb].onclick = function () { showTab(this.getAttribute("data-tab")); };
+  outBtn.onclick = function () { try { sessionStorage.removeItem(AUTH); } catch (e) {} lock.style.display = "flex"; pass.value = ""; };
+  document.querySelectorAll("[data-goto]").forEach(function (b) { b.onclick = function () { showTab(b.getAttribute("data-goto")); }; });
+  document.querySelectorAll(".tabs button").forEach(function (b) { b.onclick = function () { showTab(b.getAttribute("data-tab")); }; });
+  group("#panelAdd [data-type]", "data-type", function (v) { type = v; partnerWrap.style.display = type === "salary" ? "block" : "none"; });
+  group("#panelFuel [data-fuel]", "data-fuel", function (v) { fuelKind = v; fuelSubmit.textContent = v === "fuel" ? "Пополнить карту" : "Списать с карты"; });
+  group("#panelMarket [data-who]", "data-who", function (v) { who = v; marketSubmit.textContent = "Записать трату " + (v === "nastya" ? "Насти" : "Наташи"); });
+  group("#panelMarket [data-place]", "data-place", function (v) { place = v; });
+  group("#panelMarket [data-purpose]", "data-purpose", function (v) { purpose = v; });
 
   form.onsubmit = function (e) {
     e.preventDefault();
-    var amount = money(document.getElementById("amount").value);
-    if (amount <= 0) return;
-    tx.push({ id: Date.now().toString(36) + Math.random().toString(36).slice(2, 7), date: document.getElementById("date").value, amount: amount, type: type, comment: document.getElementById("comment").value.trim(), partner: type === "salary" ? partner.value : null });
-    document.getElementById("amount").value = "";
-    document.getElementById("comment").value = "";
-    persist();
+    var amount = money(document.getElementById("amount").value); if (amount <= 0) return;
+    tx.push({ id: Date.now().toString(36) + Math.random().toString(36).slice(2, 7), date: date.value, amount: amount, type: type, comment: comment.value.trim(), partner: type === "salary" ? partner.value : null, marketplace: null, purpose: null });
+    document.getElementById("amount").value = ""; comment.value = ""; persist();
+  };
+  marketForm.onsubmit = function (e) {
+    e.preventDefault();
+    var amount = money(marketAmount.value); if (amount <= 0) return;
+    tx.push({ id: Date.now().toString(36) + Math.random().toString(36).slice(2, 7), date: marketDate.value, amount: amount, type: "market", partner: who, marketplace: place, purpose: purpose, comment: marketComment.value.trim() });
+    marketAmount.value = ""; marketComment.value = ""; persist();
   };
   fuelForm.onsubmit = function (e) {
     e.preventDefault();
-    var amount = money(fuelAmount.value);
-    if (amount <= 0) return;
-    tx.push({ id: Date.now().toString(36) + Math.random().toString(36).slice(2, 7), date: fuelDate.value, amount: amount, type: fuelKind, comment: fuelComment.value.trim(), partner: null, category: "logistics" });
-    fuelAmount.value = "";
-    fuelComment.value = "";
-    persist();
+    var amount = money(fuelAmount.value); if (amount <= 0) return;
+    tx.push({ id: Date.now().toString(36) + Math.random().toString(36).slice(2, 7), date: fuelDate.value, amount: amount, type: fuelKind, partner: null, marketplace: null, purpose: null, comment: fuelComment.value.trim(), category: "logistics" });
+    fuelAmount.value = ""; fuelComment.value = ""; persist();
   };
   exportBtn.onclick = function () {
-    var head = "Дата;Сумма;Тип;Партнёр;Комментарий";
-    var rows = tx.map(function (t) { return [t.date, t.amount, LABELS[t.type] || t.type, NAMES[t.partner] || "", '"' + String(t.comment || "").replace(/"/g, '""') + '"'].join(";"); });
+    var head = "Дата;Сумма;Тип;Кто;Площадка;На что;Комментарий";
+    var rows = tx.map(function (t) { return [t.date, t.amount, LABELS[t.type] || t.type, NAMES[t.partner] || "", PLACES[t.marketplace] || "", PURP[t.purpose] || "", '"' + String(t.comment || "").replace(/"/g, '""') + '"'].join(";"); });
     var a = document.createElement("a");
     a.href = URL.createObjectURL(new Blob(["\uFEFF" + [head].concat(rows).join("\n")], { type: "text/csv;charset=utf-8;" }));
-    a.download = "neit-kassa.csv";
-    a.click();
+    a.download = "neit-kassa.csv"; a.click();
   };
-  monthFilter.onchange = renderLog;
-  document.getElementById("date").valueAsDate = new Date();
-  fuelDate.valueAsDate = new Date();
-
-  try {
-    var local = JSON.parse(localStorage.getItem(KEY) || "[]");
-    if (Array.isArray(local) && local.length) tx = local;
-  } catch (e) {}
-  db.ref(".info/connected").on("value", function (s) { fbWarn.style.display = s.val() === true ? "none" : "block"; });
+  monthFilter.onchange = renderLists;
+  date.valueAsDate = new Date(); fuelDate.valueAsDate = new Date(); marketDate.valueAsDate = new Date();
+  try { var local = JSON.parse(localStorage.getItem(KEY) || "[]"); if (Array.isArray(local) && local.length) tx = local; } catch (e) {}
+  firebase.database().ref(".info/connected").on("value", function (s) { fbWarn.style.display = s.val() === true ? "none" : "block"; });
   ref.on("value", function (snap) {
     var val = snap.val();
     if (Array.isArray(val)) tx = val;
@@ -384,7 +423,7 @@
     render();
   }, function () { fbWarn.style.display = "block"; render(); });
   render();
-  try { if (sessionStorage.getItem(AUTH) === "1") unlock(); } catch (e) {}
+  try { if (sessionStorage.getItem(AUTH) === "1") lock.style.display = "none"; } catch (e) {}
 })();
 </script>
 </body>
