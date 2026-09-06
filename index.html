@@ -1,223 +1,202 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="ru" data-theme="dark">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <meta name="theme-color" content="#0a0a0b" />
-  <title>ООО «Нейт» — касса 30/70</title>
+  <meta name="theme-color" content="#0c0c0d" />
+  <title>ООО «Нейт»</title>
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
   <style>
-    :root { --bg:#0a0a0b; --surface:#141416; --elevated:#1c1c20; --fg:#f4f4f5; --muted:#a1a1aa; --border:#2a2a30; --accent:#d4d7de; --accent-fg:#0a0a0b; --ok:#7dcea0; --bad:#e08b8b; --ink:#c8ccd4; }
+    :root {
+      --bg:#0c0c0d; --surface:#161618; --elevated:#1e1e22; --fg:#f4f4f5;
+      --muted:#8e8e96; --subtle:#6b6b73; --border:#2a2a30; --accent:#e8e4dc;
+      --accent-fg:#111113; --ok:#5dba8a; --bad:#d97878; --ink:#c8ccd4;
+      --shadow: 0 0 0 1px rgba(255,255,255,.08);
+    }
+    html[data-theme="light"] {
+      --bg:#f4f2ee; --surface:#fffcf8; --elevated:#f0ece6; --fg:#161618;
+      --muted:#6b675f; --subtle:#8a857c; --border:#e4dfd6; --accent:#1a1a1c;
+      --accent-fg:#f7f4ef; --ok:#1f7a4d; --bad:#b42318; --ink:#2a2a2e;
+      --shadow: 0 0 0 1px rgba(0,0,0,.06), 0 1px 2px -1px rgba(0,0,0,.06);
+    }
     * { box-sizing:border-box; margin:0; padding:0; }
-    html,body { background:var(--bg); color:var(--fg); font-family:"Segoe UI",system-ui,sans-serif; min-height:100%; color-scheme:dark; }
+    html,body { background:var(--bg); color:var(--fg); font-family:"Segoe UI",system-ui,sans-serif; min-height:100%; }
+    html[data-theme="dark"] { color-scheme:dark; }
+    html[data-theme="light"] { color-scheme:light; }
     body { padding:16px 16px 80px; max-width:760px; margin:0 auto; }
-    h1 { font-size:18px; font-weight:600; }
-    .sub,.tiny { color:var(--muted); font-size:12px; margin-top:4px; line-height:1.4; }
-    .top { display:flex; justify-content:space-between; gap:12px; margin-bottom:16px; }
+    h1 { font-size:17px; font-weight:600; }
+    h2 { font-size:16px; font-weight:600; }
+    .sub { color:var(--muted); font-size:12px; margin-top:2px; }
+    .top { display:flex; justify-content:space-between; align-items:center; gap:12px; margin-bottom:16px; }
     button,input,select,textarea { font:inherit; color:var(--fg); background:var(--elevated); border:1px solid var(--border); border-radius:12px; }
-    button { cursor:pointer; min-height:44px; }
-    .chip { padding:8px 14px; font-size:13px; background:var(--surface); }
+    button { cursor:pointer; min-height:40px; }
+    .chip { padding:8px 14px; font-size:13px; border-radius:999px; background:transparent; }
+    .chip.on { background:var(--elevated); outline:1px solid var(--ink); }
+    .primary { background:var(--accent); color:var(--accent-fg); font-weight:600; border:0; }
     .grid4,.grid2,.grid3 { display:grid; gap:10px; }
     .grid4,.grid2 { grid-template-columns:1fr 1fr; }
     .grid3 { grid-template-columns:1fr 1fr 1fr; }
-    .card { background:var(--surface); border:1px solid var(--border); border-radius:20px; padding:14px; margin-bottom:12px; }
-    .label { font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); font-weight:600; }
+    .card { background:var(--surface); box-shadow:var(--shadow); border-radius:20px; padding:14px; margin-bottom:12px; }
+    .label { font-size:11px; color:var(--muted); }
     .val { font-size:18px; font-weight:600; margin-top:4px; font-variant-numeric:tabular-nums; }
     .who { display:flex; justify-content:space-between; gap:8px; }
-    .pct { font-size:12px; padding:4px 8px; border-radius:999px; border:1px solid var(--border); color:var(--muted); }
-    .bar { height:6px; background:var(--elevated); border-radius:99px; overflow:hidden; margin:10px 0; }
-    .bar>i { display:block; height:100%; background:var(--ink); width:0; }
+    .pct { font-size:12px; padding:4px 8px; border-radius:999px; background:var(--elevated); color:var(--muted); }
     .row { display:flex; justify-content:space-between; font-size:13px; padding:6px 0; border-bottom:1px solid var(--border); gap:8px; }
     .row:last-child { border-bottom:0; }
     .ok { color:var(--ok); } .bad { color:var(--bad); }
-    .hint { margin:4px 0 14px; padding:14px; border-radius:16px; border:1px solid var(--border); background:var(--surface); font-size:14px; line-height:1.5; }
-    form { display:grid; gap:12px; }
+    form { display:grid; gap:10px; margin-top:12px; }
     label { font-size:12px; color:var(--muted); font-weight:600; display:block; margin-bottom:6px; }
     input,select,textarea { width:100%; padding:12px 14px; min-height:44px; }
-    textarea { min-height:72px; }
     .ops { display:flex; flex-wrap:wrap; gap:8px; }
-    .op { padding:10px 12px; font-size:13px; font-weight:600; background:var(--surface); min-height:40px; }
-    .op.on { outline:1px solid var(--ink); background:var(--elevated); }
-    .primary { background:var(--accent); color:var(--accent-fg); font-weight:600; border:0; }
-    .tabs { display:flex; flex-wrap:wrap; gap:8px; margin:8px 0 12px; }
-    .tabs button { padding:8px 14px; border-radius:999px; font-size:13px; background:var(--surface); }
+    .op { padding:8px 12px; font-size:13px; border-radius:999px; background:transparent; }
+    .op.on { background:var(--elevated); outline:1px solid var(--ink); }
+    .tabs { display:flex; gap:8px; margin:8px 0 12px; }
+    .tabs button { padding:8px 14px; border-radius:999px; font-size:13px; }
     .tabs button.on { background:var(--elevated); outline:1px solid var(--ink); }
-    .modal { position:fixed; inset:0; background:rgba(0,0,0,.82); display:flex; align-items:center; justify-content:center; padding:20px; z-index:20; }
-    .box { background:var(--surface); border:1px solid var(--border); border-radius:28px; padding:24px; width:min(400px,100%); }
+    .modal { position:fixed; inset:0; background:color-mix(in srgb, var(--bg) 80%, transparent); display:flex; align-items:center; justify-content:center; padding:20px; z-index:20; backdrop-filter:blur(8px); }
+    .box { background:var(--surface); box-shadow:var(--shadow); border-radius:24px; padding:24px; width:min(400px,100%); }
     .del { background:none; border:0; color:var(--bad); min-height:auto; font-size:13px; padding:8px; }
     ul { list-style:none; }
     li { border-top:1px solid var(--border); padding:12px 0; display:flex; justify-content:space-between; gap:12px; }
-    .warn { display:none; background:rgba(224,139,139,.12); color:#e08b8b; padding:10px 12px; border-radius:12px; margin-bottom:12px; font-size:13px; }
+    .warn { display:none; background:color-mix(in srgb, var(--bad) 12%, transparent); color:var(--bad); padding:10px 12px; border-radius:12px; margin-bottom:12px; font-size:13px; }
     .mini { background:var(--elevated); border-radius:12px; padding:10px; }
+    .logo { display:inline-flex; align-items:center; justify-content:center; width:32px; height:32px; border-radius:8px; color:#fff; font-size:10px; font-weight:700; flex-shrink:0; }
+    .place { display:flex; align-items:center; gap:8px; background:var(--elevated); border-radius:12px; padding:8px; }
+    .tiny { font-size:12px; color:var(--muted); }
+    .foot { color:var(--subtle); font-size:12px; line-height:1.5; margin-top:24px; }
+    .note { background:var(--elevated); border-radius:12px; padding:10px 12px; font-size:12px; color:var(--muted); margin-bottom:12px; }
+    .sum { width:100%; display:flex; justify-content:space-between; align-items:center; background:none; border:0; padding:0; min-height:32px; font-weight:600; }
     @media (min-width:720px) { .grid4 { grid-template-columns:repeat(4,1fr); } }
   </style>
 </head>
 <body>
-<div id="lock" class="modal"><div class="box">
-  <p class="label">ООО «Нейт»</p>
-  <h1 style="font-size:24px;margin:8px 0">Касса партнёров</h1>
-  <p class="tiny">Настя 70% · Наташа 30%. Топливо и маркетплейсы отдельно: видно, кто и на что тратит.</p>
-  <label style="margin-top:16px" for="pass">Пароль</label>
-  <input id="pass" type="password" inputmode="numeric" autocomplete="off" placeholder="••••" />
+<div id="gate" class="modal" style="display:none"><div class="box">
+  <p class="label">Наташа Тейковцева</p>
+  <h1 style="font-size:22px;margin:6px 0 14px">Вход директора</h1>
+  <input id="pass" type="password" inputmode="numeric" autocomplete="off" placeholder="Пароль" />
   <p id="passErr" class="tiny bad" style="display:none;margin-top:8px">Неверный пароль</p>
-  <button class="primary" id="enter" type="button" style="width:100%;margin-top:12px">Войти</button>
+  <div class="grid2" style="margin-top:12px">
+    <button class="chip" id="cancelGate" type="button">Отмена</button>
+    <button class="primary" id="enter" type="button">Войти</button>
+  </div>
 </div></div>
 
 <header class="top">
-  <div><h1>Касса ООО «Нейт»</h1><div class="sub">70 / 30 · топливо · маркетплейсы</div></div>
-  <button class="chip" id="outBtn" type="button">Выйти</button>
+  <div>
+    <h1>ООО «Нейт»</h1>
+    <div class="sub">Настя 70% · Наташа 30%</div>
+  </div>
+  <div class="ops">
+    <button class="chip" id="themeBtn" type="button">Светлая</button>
+    <button class="chip" id="roleBtn" type="button">Директор</button>
+  </div>
 </header>
 <div id="fbWarn" class="warn">Нет связи с облаком. Пишу в память телефона.</div>
+<p id="guestNote" class="note">Просмотр. Можно записать топливо. Выручку вносит Наташа.</p>
 
 <div class="grid4">
-  <div class="card"><div class="label">Пришло</div><div class="val" id="sIncome">0 ₽</div></div>
-  <div class="card"><div class="label">Маркетплейсы</div><div class="val" id="sMarket">0 ₽</div></div>
+  <div class="card"><div class="label">Выручка</div><div class="val" id="sIncome">0 ₽</div></div>
   <div class="card"><div class="label">К разделу</div><div class="val" id="sNet">0 ₽</div></div>
-  <div class="card"><div class="label">В кассе</div><div class="val" id="sCash">0 ₽</div></div>
+  <div class="card"><div class="label">Касса</div><div class="val" id="sCash">0 ₽</div></div>
+  <div class="card"><div class="label">Топливо</div><div class="val" id="sCard">0 ₽</div></div>
 </div>
-
-<section class="card">
-  <div class="who">
-    <div><b>Маркетплейсы</b><div class="tiny">Кто потратил — снимается с её доли, не делится на двоих.</div></div>
-    <button class="chip" type="button" data-goto="market">Записать</button>
-  </div>
-  <div class="grid2" style="margin-top:12px">
-    <div class="mini"><div class="label">Настя потратила</div><div class="val" id="mpNastya">0 ₽</div></div>
-    <div class="mini"><div class="label">Наташа потратила</div><div class="val" id="mpNatalia">0 ₽</div></div>
-    <div class="mini"><div class="label">Wildberries</div><div class="val" id="mpWb">0 ₽</div></div>
-    <div class="mini"><div class="label">Ozon</div><div class="val" id="mpOzon">0 ₽</div></div>
-    <div class="mini"><div class="label">ВсеИнструменты.ру</div><div class="val" id="mpVi">0 ₽</div></div>
-    <div class="mini"><div class="label">Другой МП</div><div class="val" id="mpOther">0 ₽</div></div>
-  </div>
-</section>
-
-<section class="card">
-  <div class="who">
-    <div><b>Топливная карта</b><div class="tiny">Пополнение снимает с кассы. Списание с карты на зп не влияет.</div></div>
-    <button class="chip" type="button" data-goto="fuel">Открыть</button>
-  </div>
-  <div class="grid3" style="margin-top:12px">
-    <div class="mini"><div class="label">Пополнено</div><div class="val" id="sFuelIn">0 ₽</div></div>
-    <div class="mini"><div class="label">Потрачено</div><div class="val" id="sFuelOut">0 ₽</div></div>
-    <div class="mini"><div class="label">На карте</div><div class="val" id="sCard">0 ₽</div></div>
-  </div>
-</section>
 
 <div class="grid2">
   <section class="card">
-    <div class="who"><div><b>Настя Волкова</b><div class="tiny">ВсеИнструменты.ру · 140 000 ₽</div></div><span class="pct">70%</span></div>
-    <div class="bar"><i id="barNastya"></i></div>
+    <div class="who"><div><b>Настя Волкова</b><div class="tiny">Партнёр</div></div><span class="pct">70%</span></div>
     <div class="row"><span>Доля</span><b id="shareNastya">0 ₽</b></div>
-    <div class="row"><span>Личные расходы</span><b id="persNastya">0 ₽</b></div>
+    <div class="row"><span>Расходы</span><b id="persNastya">0 ₽</b></div>
     <div class="row"><span>Выдано</span><b id="paidNastya">0 ₽</b></div>
-    <div class="row"><span>Траты на МП</span><b id="mpCardNastya">0 ₽</b></div>
-    <div class="row"><span>До 140к</span><b id="gapNastya">140 000 ₽</b></div>
     <div class="row"><span>Остаток</span><b id="balNastya">0 ₽</b></div>
   </section>
   <section class="card">
-    <div class="who"><div><b>Наташа Тейковцева</b><div class="tiny">ООО «Нейт» · 60 000 ₽</div></div><span class="pct">30%</span></div>
-    <div class="bar"><i id="barNatalia"></i></div>
+    <div class="who"><div><b>Наташа Тейковцева</b><div class="tiny">Директор</div></div><span class="pct">30%</span></div>
     <div class="row"><span>Доля</span><b id="shareNatalia">0 ₽</b></div>
-    <div class="row"><span>Личные расходы</span><b id="persNatalia">0 ₽</b></div>
+    <div class="row"><span>Расходы</span><b id="persNatalia">0 ₽</b></div>
     <div class="row"><span>Выдано</span><b id="paidNatalia">0 ₽</b></div>
-    <div class="row"><span>Траты на МП</span><b id="mpCardNatalia">0 ₽</b></div>
-    <div class="row"><span>До 60к</span><b id="gapNatalia">60 000 ₽</b></div>
     <div class="row"><span>Остаток</span><b id="balNatalia">0 ₽</b></div>
   </section>
 </div>
 
-<div class="hint" id="hint"></div>
+<section class="card">
+  <h2>Топливо</h2>
+  <div class="grid3" style="margin-top:12px">
+    <div class="mini"><div class="label">Пополнено</div><div class="val" id="sFuelIn">0 ₽</div></div>
+    <div class="mini"><div class="label">Списано</div><div class="val" id="sFuelOut">0 ₽</div></div>
+    <div class="mini"><div class="label">Остаток</div><div class="val" id="sFuelCard">0 ₽</div></div>
+  </div>
+  <form id="fuelForm">
+    <div class="ops">
+      <button type="button" class="op on" data-fuel="fuel">Пополнить</button>
+      <button type="button" class="op" data-fuel="fuel_spend">Заправка</button>
+    </div>
+    <div class="grid2">
+      <div><label>Сумма, ₽</label><input id="fuelAmount" type="number" min="1" required inputmode="numeric" /></div>
+      <div><label>Дата</label><input id="fuelDate" type="date" required /></div>
+    </div>
+    <div><label>Комментарий</label><input id="fuelComment" placeholder="Газпромнефть, рейс" /></div>
+    <button class="primary" type="submit" id="fuelSubmit">Записать</button>
+  </form>
+  <ul id="fuelList"></ul>
+</section>
+
+<section class="card">
+  <button class="sum" type="button" id="platToggle"><span>Площадки</span><span class="tiny" id="platSum">0 ₽ · открыть</span></button>
+  <div id="platBody" style="display:none;margin-top:14px">
+    <div class="grid2" id="placeGrid"></div>
+    <form id="marketForm" style="display:none">
+      <div class="ops">
+        <button type="button" class="op on" data-who="nastya">Настя</button>
+        <button type="button" class="op" data-who="natalia">Наташа</button>
+      </div>
+      <div class="ops" id="placeOps"></div>
+      <div class="ops">
+        <button type="button" class="op on" data-purpose="ads">Реклама</button>
+        <button type="button" class="op" data-purpose="commission">Комиссия</button>
+        <button type="button" class="op" data-purpose="goods">Закупка</button>
+        <button type="button" class="op" data-purpose="delivery">Доставка</button>
+        <button type="button" class="op" data-purpose="pack">Упаковка</button>
+        <button type="button" class="op" data-purpose="other">Прочее</button>
+      </div>
+      <div class="grid2">
+        <div><label>Сумма, ₽</label><input id="marketAmount" type="number" min="1" required inputmode="numeric" /></div>
+        <div><label>Дата</label><input id="marketDate" type="date" required /></div>
+      </div>
+      <div><label>Комментарий</label><input id="marketComment" /></div>
+      <button class="primary" type="submit">Записать</button>
+    </form>
+    <ul id="marketList"></ul>
+  </div>
+</section>
+
 <div class="tabs">
-  <button class="on" data-tab="add" type="button">Касса</button>
-  <button data-tab="market" type="button">Маркетплейсы</button>
-  <button data-tab="fuel" type="button">Топливо</button>
+  <button class="on" data-tab="work" type="button">Касса</button>
   <button data-tab="log" type="button">История</button>
 </div>
 
-<section id="panelAdd" class="card">
+<section id="panelWork" class="card">
   <form id="form">
-    <div><label>Операция по кассе</label>
-      <div class="ops">
-        <button type="button" class="op on" data-type="income">Пришёл перевод</button>
-        <button type="button" class="op" data-type="expense">Прочий расход</button>
-        <button type="button" class="op" data-type="salary">Выдали зарплату</button>
-      </div>
+    <div class="ops">
+      <button type="button" class="op on" data-type="income">Выручка</button>
+      <button type="button" class="op" data-type="expense">Расход</button>
+      <button type="button" class="op" data-type="salary">Выдать</button>
     </div>
     <div class="grid2">
       <div><label>Сумма, ₽</label><input id="amount" type="number" min="1" required inputmode="numeric" /></div>
       <div><label>Дата</label><input id="date" type="date" required /></div>
     </div>
     <div id="partnerWrap" style="display:none">
-      <label id="partnerLabel">Кому</label>
-      <select id="partner">
-        <option value="nastya">Настя · с её доли</option>
-        <option value="natalia">Наташа · с её доли</option>
-      </select>
-    </div>
-    <div><label>Комментарий</label><textarea id="comment" placeholder="Откуда перевод или за что расход"></textarea></div>
-    <button class="primary" type="submit">Записать в кассу</button>
-  </form>
-</section>
-
-<section id="panelMarket" class="card" style="display:none">
-  <form id="marketForm">
-    <div><label>Кто тратит</label>
       <div class="ops">
-        <button type="button" class="op on" data-who="nastya">Настя</button>
-        <button type="button" class="op" data-who="natalia">Наташа</button>
+        <button type="button" class="op on" data-partner="nastya">Настя</button>
+        <button type="button" class="op" data-partner="natalia">Наташа</button>
       </div>
     </div>
-    <div><label>Площадка</label>
-      <div class="ops">
-        <button type="button" class="op on" data-place="wb">Wildberries</button>
-        <button type="button" class="op" data-place="ozon">Ozon</button>
-        <button type="button" class="op" data-place="vi">ВсеИнструменты.ру</button>
-        <button type="button" class="op" data-place="other">Другой МП</button>
-      </div>
-    </div>
-    <div><label>На что</label>
-      <div class="ops">
-        <button type="button" class="op on" data-purpose="ads">Реклама</button>
-        <button type="button" class="op" data-purpose="commission">Комиссия</button>
-        <button type="button" class="op" data-purpose="goods">Товар / закупка</button>
-        <button type="button" class="op" data-purpose="delivery">Доставка</button>
-        <button type="button" class="op" data-purpose="pack">Упаковка</button>
-        <button type="button" class="op" data-purpose="other">Прочее</button>
-      </div>
-    </div>
-    <div class="grid2">
-      <div><label>Сумма, ₽</label><input id="marketAmount" type="number" min="1" required inputmode="numeric" /></div>
-      <div><label>Дата</label><input id="marketDate" type="date" required /></div>
-    </div>
-    <div><label>Подробнее</label><textarea id="marketComment" placeholder="Кабинет, артикул, рекламная кампания"></textarea></div>
-    <button class="primary" type="submit" id="marketSubmit">Записать трату Насти</button>
+    <div><label>Комментарий</label><input id="comment" placeholder="Откуда пришло" /></div>
+    <button class="primary" type="submit" id="cashSubmit">Внести выручку</button>
   </form>
-  <div style="margin-top:16px">
-    <div class="label">На что ушло</div>
-    <div class="grid2" style="margin:10px 0 16px" id="purposeGrid"></div>
-    <div class="label">Кто и на что</div>
-    <ul id="marketList"></ul>
-    <p id="marketEmpty" class="tiny" style="padding:12px 0">Пока нет трат</p>
-  </div>
 </section>
-
-<section id="panelFuel" class="card" style="display:none">
-  <form id="fuelForm">
-    <div class="ops">
-      <button type="button" class="op on" data-fuel="fuel">Пополнить карту<div class="tiny">Снимает с кассы до 70/30</div></button>
-      <button type="button" class="op" data-fuel="fuel_spend">Списать с карты<div class="tiny">На зарплату не влияет</div></button>
-    </div>
-    <div class="grid2">
-      <div><label>Сумма, ₽</label><input id="fuelAmount" type="number" min="1" required inputmode="numeric" /></div>
-      <div><label>Дата</label><input id="fuelDate" type="date" required /></div>
-    </div>
-    <div><label>Комментарий</label><textarea id="fuelComment" placeholder="Заправка, рейс"></textarea></div>
-    <button class="primary" type="submit" id="fuelSubmit">Пополнить карту</button>
-  </form>
-  <ul id="fuelList"></ul>
-  <p id="fuelEmpty" class="tiny" style="padding:12px 0">Пока пусто</p>
-</section>
+<p id="workGuest" class="note" style="display:none">Выручку и выдачу вносит Наташа.</p>
 
 <section id="panelLog" class="card" style="display:none">
   <div style="display:flex;gap:8px;margin-bottom:10px">
@@ -225,38 +204,40 @@
     <button class="chip" id="exportBtn" type="button">CSV</button>
   </div>
   <ul id="list"></ul>
-  <p id="empty" class="tiny" style="padding:16px 0;display:none">Операций нет</p>
+  <p id="empty" class="tiny" style="padding:16px 0;display:none">Пока пусто</p>
 </section>
+
+<footer class="foot">Наташа как директор вносит выручку. После топлива сумма делится 70% Насте и 30% Наташе. Личный расход и траты площадок идут с доли того, кто потратил. Топливо могут записать обе. Правки кассы — только у Наташи.</footer>
 
 <script>
 (function () {
   var PIN = "1234";
   var KEY = "neit-kassa-v2";
   var AUTH = "neit-kassa-auth";
-  var TARGET = { nastya: 140000, natalia: 60000 };
+  var THEME = "neit-theme";
   var SHARE = { nastya: 0.7, natalia: 0.3 };
   var NAMES = { nastya: "Настя", natalia: "Наташа" };
-  var PLACES = { wb: "Wildberries", ozon: "Ozon", vi: "ВсеИнструменты.ру", other: "Другой МП" };
-  var PURP = { ads: "Реклама", commission: "Комиссия", goods: "Товар / закупка", delivery: "Доставка", pack: "Упаковка", other: "Прочее" };
-  var LABELS = { income: "перевод", fuel: "пополнение карты", fuel_spend: "списание с карты", expense: "расход", market: "маркетплейс", salary: "зарплата", personal: "изъятие" };
+  var PLACES = {
+    wb: { name: "Wildberries", short: "WB", color: "#CB11AB" },
+    ozon: { name: "Ozon", short: "OZ", color: "#005BFF" },
+    vi: { name: "ВсеИнструменты", short: "VI", color: "#FF6900" },
+    ym: { name: "Яндекс Маркет", short: "YM", color: "#FFCC00" },
+    ali: { name: "AliExpress", short: "Ali", color: "#E62E04" },
+    avito: { name: "Авито", short: "Avito", color: "#00AAFF" },
+    other: { name: "Другое", short: "·", color: "#71717a" }
+  };
+  var PURP = { ads: "Реклама", commission: "Комиссия", goods: "Закупка", delivery: "Доставка", pack: "Упаковка", other: "Прочее" };
+  var LABELS = { income: "выручка", fuel: "топливо", fuel_spend: "заправка", expense: "расход", market: "площадка", salary: "выдано", personal: "изъятие" };
   firebase.initializeApp({ apiKey: "AIzaSyCSME5fUFOS6R80-2-wEgOyAUyJx1M0a1A", authDomain: "neit-41882.firebaseapp.com", projectId: "neit-41882", storageBucket: "neit-41882.firebasestorage.app", messagingSenderId: "478613249008", appId: "1:478613249008:web:42f214670ccc00a4935b35", databaseURL: "https://neit-41882-default-rtdb.europe-west1.firebasedatabase.app/" });
   var ref = firebase.database().ref("transactions");
   var tx = [];
-  var type = "income", fuelKind = "fuel", who = "nastya", place = "wb", purpose = "ads";
+  var director = false;
+  var type = "income", fuelKind = "fuel", who = "nastya", place = "wb", purpose = "ads", partner = "nastya";
+  var platOpen = false;
 
   function rub(n) { return new Intl.NumberFormat("ru-RU", { style: "currency", currency: "RUB", maximumFractionDigits: 0 }).format(Math.round(n || 0)); }
   function money(n) { return Math.round(Number(n) || 0); }
   function esc(s) { var d = document.createElement("div"); d.textContent = s == null ? "" : String(s); return d.innerHTML; }
-  function title(t) {
-    var bits = [LABELS[t.type] || t.type];
-    var who = ownerOf(t);
-    if (who && NAMES[who]) bits.push(NAMES[who]);
-    else if (t.type === "expense") bits.push("общий");
-    if (t.marketplace && PLACES[t.marketplace]) bits.push(PLACES[t.marketplace]);
-    if (t.purpose && PURP[t.purpose]) bits.push(PURP[t.purpose]);
-    return bits.join(" · ");
-  }
-
   function ownerOf(t) {
     if (t.partner === "nastya" || t.partner === "natalia") return t.partner;
     var c = String(t.comment || "").toLowerCase();
@@ -264,13 +245,24 @@
     if (/наташ/.test(c)) return "natalia";
     return null;
   }
+  function title(t) {
+    var bits = [LABELS[t.type] || t.type];
+    var ow = ownerOf(t);
+    if (ow) bits.push(NAMES[ow]);
+    if (t.marketplace && PLACES[t.marketplace]) bits.push(PLACES[t.marketplace].name);
+    if (t.purpose && PURP[t.purpose]) bits.push(PURP[t.purpose]);
+    return bits.join(" · ");
+  }
+  function logo(id) {
+    var p = PLACES[id];
+    return '<span class="logo" style="background:' + p.color + '">' + esc(p.short.slice(0, 2)) + "</span>";
+  }
   function metrics() {
     var income = 0, fuel = 0, fuelSpend = 0, commonExpense = 0, market = 0;
     var paid = { nastya: 0, natalia: 0 };
     var personal = { nastya: 0, natalia: 0 };
     var byWho = { nastya: 0, natalia: 0 };
-    var byPlace = { wb: 0, ozon: 0, vi: 0, other: 0 };
-    var byPurp = { ads: 0, commission: 0, goods: 0, delivery: 0, pack: 0, other: 0 };
+    var byPlace = { wb: 0, ozon: 0, vi: 0, ym: 0, ali: 0, avito: 0, other: 0 };
     for (var i = 0; i < tx.length; i++) {
       var t = tx[i], a = money(t.amount);
       if (t.type === "income") income += a;
@@ -284,78 +276,73 @@
         var mw = ownerOf(t);
         if (mw) { personal[mw] += a; byWho[mw] += a; } else commonExpense += a;
         if (byPlace[t.marketplace] != null) byPlace[t.marketplace] += a;
-        if (byPurp[t.purpose] != null) byPurp[t.purpose] += a;
       } else if ((t.type === "salary" || t.type === "personal") && paid[t.partner] != null) paid[t.partner] += a;
     }
     var net = income - fuel - commonExpense;
     var shares = { nastya: net * SHARE.nastya, natalia: net * SHARE.natalia };
     return {
-      income: income, fuel: fuel, fuelSpend: fuelSpend, card: fuel - fuelSpend,
-      expense: personal.nastya + personal.natalia + commonExpense, market: market, net: net,
-      personal: personal, paid: paid, shares: shares,
+      income: income, fuel: fuel, fuelSpend: fuelSpend, card: fuel - fuelSpend, market: market, net: net,
+      personal: personal, paid: paid, shares: shares, byWho: byWho, byPlace: byPlace,
       bal: { nastya: shares.nastya - paid.nastya - personal.nastya, natalia: shares.natalia - paid.natalia - personal.natalia },
-      cash: net - paid.nastya - paid.natalia - personal.nastya - personal.natalia,
-      byWho: byWho, byPlace: byPlace, byPurp: byPurp
+      cash: net - paid.nastya - paid.natalia - personal.nastya - personal.natalia
     };
   }
 
-  function setP(m, key, shareEl, paidEl, mpEl, gapEl, balEl, barEl) {
-    shareEl.textContent = rub(m.shares[key]);
-    paidEl.textContent = rub(m.paid[key]);
-    mpEl.textContent = rub(m.byWho[key]);
-    document.getElementById(key === "nastya" ? "persNastya" : "persNatalia").textContent = rub(m.personal[key]);
-    gapEl.textContent = rub(Math.max(0, TARGET[key] - m.paid[key]));
-    balEl.textContent = rub(m.bal[key]);
-    balEl.className = m.bal[key] >= 0 ? "ok" : "bad";
-    barEl.style.width = Math.min(100, (m.paid[key] / TARGET[key]) * 100) + "%";
+  function setRoleUI() {
+    guestNote.style.display = director ? "none" : "block";
+    roleBtn.textContent = director ? "Наташа" : "Директор";
+    roleBtn.className = director ? "primary" : "chip";
+    form.style.display = director ? "grid" : "none";
+    workGuest.style.display = director ? "none" : "block";
+    marketForm.style.display = director ? "grid" : "none";
+    panelWork.style.display = document.querySelector('.tabs button.on').getAttribute("data-tab") === "work" && director ? "block" : "none";
+    if (document.querySelector('.tabs button.on').getAttribute("data-tab") === "work" && !director) workGuest.style.display = "block";
   }
 
   function render() {
     var m = metrics();
     sIncome.textContent = rub(m.income);
-    sMarket.textContent = rub(m.market);
     sNet.textContent = rub(m.net);
     sCash.textContent = rub(m.cash);
-    mpNastya.textContent = rub(m.byWho.nastya);
-    mpNatalia.textContent = rub(m.byWho.natalia);
-    mpWb.textContent = rub(m.byPlace.wb);
-    mpOzon.textContent = rub(m.byPlace.ozon);
-    mpVi.textContent = rub(m.byPlace.vi);
-    mpOther.textContent = rub(m.byPlace.other);
+    sCard.textContent = rub(m.card);
     sFuelIn.textContent = rub(m.fuel);
     sFuelOut.textContent = rub(m.fuelSpend);
-    sCard.textContent = rub(m.card);
-    sCard.className = "val " + (m.card < 0 ? "bad" : "ok");
-    setP(m, "nastya", shareNastya, paidNastya, mpCardNastya, gapNastya, balNastya, barNastya);
-    setP(m, "natalia", shareNatalia, paidNatalia, mpCardNatalia, gapNatalia, balNatalia, barNatalia);
-    var text;
-    if (!tx.length) text = "Запишите перевод. Расход — на Настю или Наташу и снимается с её доли, не с обеих.";
-    else {
-      text = "К разделу " + rub(m.net) + ": Насте " + rub(m.shares.nastya) + ", Наташе " + rub(m.shares.natalia) + ". Личные: Настя " + rub(m.personal.nastya) + ", Наташа " + rub(m.personal.natalia) + ". В кассе " + rub(m.cash) + ".";
-    }
-    hint.textContent = text;
-    purposeGrid.innerHTML = Object.keys(PURP).map(function (k) {
-      return '<div class="mini"><div class="label">' + esc(PURP[k]) + '</div><div class="val">' + rub(m.byPurp[k]) + "</div></div>";
+    sFuelCard.textContent = rub(m.card);
+    sFuelCard.className = "val " + (m.card < 0 ? "bad" : "ok");
+    shareNastya.textContent = rub(m.shares.nastya);
+    shareNatalia.textContent = rub(m.shares.natalia);
+    persNastya.textContent = rub(m.personal.nastya);
+    persNatalia.textContent = rub(m.personal.natalia);
+    paidNastya.textContent = rub(m.paid.nastya);
+    paidNatalia.textContent = rub(m.paid.natalia);
+    balNastya.textContent = rub(m.bal.nastya);
+    balNatalia.textContent = rub(m.bal.natalia);
+    balNastya.className = m.bal.nastya >= 0 ? "ok" : "bad";
+    balNatalia.className = m.bal.natalia >= 0 ? "ok" : "bad";
+    platSum.textContent = rub(m.market) + (platOpen ? " · свернуть" : " · открыть");
+    placeGrid.innerHTML = Object.keys(PLACES).filter(function (k) { return k !== "other"; }).map(function (k) {
+      return '<div class="place">' + logo(k) + '<div><div class="tiny">' + esc(PLACES[k].name) + '</div><div class="val" style="font-size:14px">' + rub(m.byPlace[k]) + "</div></div></div>";
     }).join("");
     renderLists();
+    setRoleUI();
   }
 
   function rowHtml(t) {
     var sign = (t.type === "income" || t.type === "fuel") ? "+" : "−";
-    return '<li><div><div>' + sign + rub(t.amount) + '</div><div class="tiny">' + esc(t.date) + " · " + esc(title(t)) + "</div>" + (t.comment ? '<div class="tiny">' + esc(t.comment) + "</div>" : "") + '</div><button class="del" type="button" data-id="' + esc(t.id) + '">Удалить</button></li>';
+    var del = director ? '<button class="del" type="button" data-id="' + esc(t.id) + '">Удалить</button>' : "";
+    return '<li><div><div>' + sign + rub(t.amount) + '</div><div class="tiny">' + esc(t.date) + " · " + esc(title(t)) + "</div>" + (t.comment ? '<div class="tiny">' + esc(t.comment) + "</div>" : "") + "</div>" + del + "</li>";
   }
   function bindDel(root) {
     var dels = root.querySelectorAll(".del");
     for (var j = 0; j < dels.length; j++) dels[j].onclick = function () {
-      if (!confirm("Удалить запись?")) return;
+      if (!director || !confirm("Удалить запись?")) return;
       var id = this.getAttribute("data-id");
       tx = tx.filter(function (t) { return t.id !== id; });
       persist();
     };
   }
-  function fill(list, empty, rows) {
+  function fill(list, rows) {
     list.innerHTML = rows.map(rowHtml).join("");
-    empty.style.display = rows.length ? "none" : "block";
     bindDel(list);
   }
   function renderLists() {
@@ -371,9 +358,10 @@
     monthFilter.innerHTML = '<option value="all">Все месяцы</option>' + months.map(function (mo) {
       return '<option value="' + esc(mo) + '"' + (mo === month ? " selected" : "") + ">" + esc(mo) + "</option>";
     }).join("");
-    fill(list, empty, all);
-    fill(marketList, marketEmpty, tx.filter(function (t) { return t.type === "market"; }).sort(function (a, b) { return String(b.date || "").localeCompare(String(a.date || "")); }));
-    fill(fuelList, fuelEmpty, tx.filter(function (t) { return t.type === "fuel" || t.type === "fuel_spend"; }).sort(function (a, b) { return String(b.date || "").localeCompare(String(a.date || "")); }));
+    fill(list, all);
+    empty.style.display = all.length ? "none" : "block";
+    fill(marketList, tx.filter(function (t) { return t.type === "market"; }).sort(function (a, b) { return String(b.date || "").localeCompare(String(a.date || "")); }));
+    fill(fuelList, tx.filter(function (t) { return t.type === "fuel" || t.type === "fuel_spend"; }).sort(function (a, b) { return String(b.date || "").localeCompare(String(a.date || "")); }).slice(0, 4));
   }
 
   function persist() {
@@ -381,69 +369,117 @@
     try { ref.set(tx); } catch (e) { fbWarn.style.display = "block"; }
     render();
   }
-  function showTab(tab) {
-    var tabs = document.querySelectorAll(".tabs button");
-    for (var x = 0; x < tabs.length; x++) tabs[x].classList.toggle("on", tabs[x].getAttribute("data-tab") === tab);
-    panelAdd.style.display = tab === "add" ? "block" : "none";
-    panelMarket.style.display = tab === "market" ? "block" : "none";
-    panelFuel.style.display = tab === "fuel" ? "block" : "none";
-    panelLog.style.display = tab === "log" ? "block" : "none";
+
+  function applyTheme(t) {
+    document.documentElement.setAttribute("data-theme", t);
+    themeBtn.textContent = t === "dark" ? "Светлая" : "Тёмная";
+    document.querySelector('meta[name="theme-color"]').setAttribute("content", t === "dark" ? "#0c0c0d" : "#f4f2ee");
   }
-  function group(sel, attr, setter, extra) {
+
+  placeOps.innerHTML = Object.keys(PLACES).map(function (k, i) {
+    return '<button type="button" class="op' + (i === 0 ? " on" : "") + '" data-place="' + k + '">' + logo(k) + " " + esc(PLACES[k].name) + "</button>";
+  }).join("");
+
+  function group(sel, attr, setter) {
     var btns = document.querySelectorAll(sel);
     for (var i = 0; i < btns.length; i++) btns[i].onclick = function () {
       setter(this.getAttribute(attr));
       for (var x = 0; x < btns.length; x++) btns[x].classList.toggle("on", btns[x] === this);
-      if (extra) extra();
     };
   }
 
+  themeBtn.onclick = function () {
+    var next = document.documentElement.getAttribute("data-theme") === "dark" ? "light" : "dark";
+    try { localStorage.setItem(THEME, next); } catch (e) {}
+    applyTheme(next);
+  };
+  roleBtn.onclick = function () {
+    if (director) {
+      director = false;
+      try { sessionStorage.removeItem(AUTH); } catch (e) {}
+      render();
+    } else gate.style.display = "flex";
+  };
+  cancelGate.onclick = function () { gate.style.display = "none"; pass.value = ""; };
   enter.onclick = function () {
-    if (String(pass.value).trim() === PIN) { try { sessionStorage.setItem(AUTH, "1"); } catch (e) {} passErr.style.display = "none"; lock.style.display = "none"; }
-    else passErr.style.display = "block";
+    if (String(pass.value).trim() === PIN) {
+      director = true;
+      try { sessionStorage.setItem(AUTH, "1"); } catch (e) {}
+      passErr.style.display = "none";
+      gate.style.display = "none";
+      pass.value = "";
+      render();
+    } else passErr.style.display = "block";
   };
   pass.onkeydown = function (e) { if (e.key === "Enter") enter.click(); };
-  outBtn.onclick = function () { try { sessionStorage.removeItem(AUTH); } catch (e) {} lock.style.display = "flex"; pass.value = ""; };
-  document.querySelectorAll("[data-goto]").forEach(function (b) { b.onclick = function () { showTab(b.getAttribute("data-goto")); }; });
-  document.querySelectorAll(".tabs button").forEach(function (b) { b.onclick = function () { showTab(b.getAttribute("data-tab")); }; });
-  group("#panelAdd [data-type]", "data-type", function (v) {
+  platToggle.onclick = function () {
+    platOpen = !platOpen;
+    platBody.style.display = platOpen ? "block" : "none";
+    render();
+  };
+
+  group("#panelWork [data-type]", "data-type", function (v) {
     type = v;
-    partnerWrap.style.display = (type === "salary" || type === "expense") ? "block" : "none";
-    partnerLabel.textContent = type === "expense" ? "Чей расход" : "Кому зарплата";
+    partnerWrap.style.display = (v === "salary" || v === "expense") ? "block" : "none";
+    cashSubmit.textContent = v === "income" ? "Внести выручку" : "Записать";
   });
-  group("#panelFuel [data-fuel]", "data-fuel", function (v) { fuelKind = v; fuelSubmit.textContent = v === "fuel" ? "Пополнить карту" : "Списать с карты"; });
-  group("#panelMarket [data-who]", "data-who", function (v) { who = v; marketSubmit.textContent = "Записать трату " + (v === "nastya" ? "Насти" : "Наташи"); });
-  group("#panelMarket [data-place]", "data-place", function (v) { place = v; });
-  group("#panelMarket [data-purpose]", "data-purpose", function (v) { purpose = v; });
+  group("#fuelForm [data-fuel]", "data-fuel", function (v) { fuelKind = v; });
+  group("#marketForm [data-who]", "data-who", function (v) { who = v; });
+  group("#placeOps [data-place]", "data-place", function (v) { place = v; });
+  group("#marketForm [data-purpose]", "data-purpose", function (v) { purpose = v; });
+  group("#partnerWrap [data-partner]", "data-partner", function (v) { partner = v; });
+  document.querySelectorAll(".tabs button").forEach(function (b) {
+    b.onclick = function () {
+      document.querySelectorAll(".tabs button").forEach(function (x) { x.classList.toggle("on", x === b); });
+      var tab = b.getAttribute("data-tab");
+      panelLog.style.display = tab === "log" ? "block" : "none";
+      panelWork.style.display = tab === "work" && director ? "block" : "none";
+      workGuest.style.display = tab === "work" && !director ? "block" : "none";
+    };
+  });
 
   form.onsubmit = function (e) {
     e.preventDefault();
+    if (!director) return;
     var amount = money(document.getElementById("amount").value); if (amount <= 0) return;
-    tx.push({ id: Date.now().toString(36) + Math.random().toString(36).slice(2, 7), date: date.value, amount: amount, type: type, comment: comment.value.trim(), partner: (type === "salary" || type === "expense") ? partner.value : null, marketplace: null, purpose: null });
+    tx.push({ id: Date.now().toString(36) + Math.random().toString(36).slice(2, 7), date: date.value, amount: amount, type: type, comment: comment.value.trim(), partner: (type === "salary" || type === "expense") ? partner : null, marketplace: null, purpose: null });
     document.getElementById("amount").value = ""; comment.value = ""; persist();
-  };
-  marketForm.onsubmit = function (e) {
-    e.preventDefault();
-    var amount = money(marketAmount.value); if (amount <= 0) return;
-    tx.push({ id: Date.now().toString(36) + Math.random().toString(36).slice(2, 7), date: marketDate.value, amount: amount, type: "market", partner: who, marketplace: place, purpose: purpose, comment: marketComment.value.trim() });
-    marketAmount.value = ""; marketComment.value = ""; persist();
   };
   fuelForm.onsubmit = function (e) {
     e.preventDefault();
     var amount = money(fuelAmount.value); if (amount <= 0) return;
-    tx.push({ id: Date.now().toString(36) + Math.random().toString(36).slice(2, 7), date: fuelDate.value, amount: amount, type: fuelKind, partner: null, marketplace: null, purpose: null, comment: fuelComment.value.trim(), category: "logistics" });
+    tx.push({ id: Date.now().toString(36) + Math.random().toString(36).slice(2, 7), date: fuelDate.value, amount: amount, type: fuelKind, comment: fuelComment.value.trim(), partner: director ? "natalia" : "nastya", marketplace: null, purpose: null });
     fuelAmount.value = ""; fuelComment.value = ""; persist();
+  };
+  marketForm.onsubmit = function (e) {
+    e.preventDefault();
+    if (!director) return;
+    var amount = money(marketAmount.value); if (amount <= 0) return;
+    tx.push({ id: Date.now().toString(36) + Math.random().toString(36).slice(2, 7), date: marketDate.value, amount: amount, type: "market", partner: who, marketplace: place, purpose: purpose, comment: marketComment.value.trim() });
+    marketAmount.value = ""; marketComment.value = ""; persist();
   };
   exportBtn.onclick = function () {
     var head = "Дата;Сумма;Тип;Кто;Площадка;На что;Комментарий";
-    var rows = tx.map(function (t) { return [t.date, t.amount, LABELS[t.type] || t.type, NAMES[t.partner] || "", PLACES[t.marketplace] || "", PURP[t.purpose] || "", '"' + String(t.comment || "").replace(/"/g, '""') + '"'].join(";"); });
+    var rows = tx.map(function (t) { return [t.date, t.amount, LABELS[t.type] || t.type, NAMES[t.partner] || "", (PLACES[t.marketplace] || {}).name || "", PURP[t.purpose] || "", '"' + String(t.comment || "").replace(/"/g, '""') + '"'].join(";"); });
     var a = document.createElement("a");
     a.href = URL.createObjectURL(new Blob(["\uFEFF" + [head].concat(rows).join("\n")], { type: "text/csv;charset=utf-8;" }));
-    a.download = "neit-kassa.csv"; a.click();
+    a.download = "neit-kassa.csv";
+    a.click();
   };
   monthFilter.onchange = renderLists;
-  date.valueAsDate = new Date(); fuelDate.valueAsDate = new Date(); marketDate.valueAsDate = new Date();
-  try { var local = JSON.parse(localStorage.getItem(KEY) || "[]"); if (Array.isArray(local) && local.length) tx = local; } catch (e) {}
+  document.getElementById("date").valueAsDate = new Date();
+  fuelDate.valueAsDate = new Date();
+  marketDate.valueAsDate = new Date();
+
+  try {
+    var th = localStorage.getItem(THEME);
+    applyTheme(th === "light" ? "light" : "dark");
+  } catch (e) { applyTheme("dark"); }
+  try { if (sessionStorage.getItem(AUTH) === "1") director = true; } catch (e) {}
+  try {
+    var local = JSON.parse(localStorage.getItem(KEY) || "[]");
+    if (Array.isArray(local) && local.length) tx = local;
+  } catch (e) {}
   firebase.database().ref(".info/connected").on("value", function (s) { fbWarn.style.display = s.val() === true ? "none" : "block"; });
   ref.on("value", function (snap) {
     var val = snap.val();
@@ -452,7 +488,6 @@
     render();
   }, function () { fbWarn.style.display = "block"; render(); });
   render();
-  try { if (sessionStorage.getItem(AUTH) === "1") lock.style.display = "none"; } catch (e) {}
 })();
 </script>
 </body>
