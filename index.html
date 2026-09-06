@@ -285,10 +285,21 @@
     .place-bar > span { display: block; height: 100%; border-radius: 999px; transition: width 0.45s cubic-bezier(0.16, 1, 0.3, 1); }
     .place.on, .place.hot { background: var(--surface-hover); box-shadow: 0 0 0 1px var(--fg); }
     .donut-wrap { display: flex; align-items: center; gap: 16px; margin-bottom: 14px; }
-    .donut { flex-shrink: 0; }
-    .donut svg { display: block; }
+    .donut {
+      width: 112px;
+      height: 112px;
+      min-width: 112px;
+      min-height: 112px;
+      position: relative;
+      flex-shrink: 0;
+    }
+    .donut svg { display: block; width: 112px; height: 112px; }
     .donut path { cursor: pointer; transition: opacity 0.2s ease, filter 0.2s ease; }
     .donut path.hot { filter: brightness(1.15); }
+    .donut-track { stroke: #c4c4cc; }
+    html[data-theme="dark"] .donut-track { stroke: #3f3f46; }
+    .donut-card { opacity: 0.78; }
+    .donut-card.on { opacity: 1; }
     .fuel-head { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
     .fuel-head h2 { margin: 0; }
     .gpn-full {
@@ -322,7 +333,7 @@
       text-align: center;
       gap: 2px;
       cursor: pointer;
-      opacity: 0.42;
+      opacity: 0.78;
       transition: opacity 0.2s ease, box-shadow 0.2s ease;
     }
     .donut-card.on { opacity: 1; box-shadow: 0 0 0 1px var(--fg); }
@@ -453,12 +464,22 @@
   <div id="platBody" style="margin-top:14px">
     <div class="donut-row">
       <div class="donut-card on" data-who="nastya">
-        <div class="donut" id="donutNastya"></div>
+        <div class="donut" id="donutNastya">
+          <svg viewBox="0 0 140 140" width="112" height="112" aria-hidden="true">
+            <circle class="donut-track" cx="70" cy="70" r="46" fill="none" stroke-width="16"/>
+            <g class="slices"></g>
+          </svg>
+        </div>
         <div class="tiny">Настя</div>
         <div class="val" id="totalNastyaM">0 ₽</div>
       </div>
       <div class="donut-card" data-who="natalia">
-        <div class="donut" id="donutNatalia"></div>
+        <div class="donut" id="donutNatalia">
+          <svg viewBox="0 0 140 140" width="112" height="112" aria-hidden="true">
+            <circle class="donut-track" cx="70" cy="70" r="46" fill="none" stroke-width="16"/>
+            <g class="slices"></g>
+          </svg>
+        </div>
         <div class="tiny">Наташа</div>
         <div class="val" id="totalNataliaM">0 ₽</div>
       </div>
@@ -567,8 +588,12 @@
     return "M " + p0.x.toFixed(2) + " " + p0.y.toFixed(2) + " A " + r1 + " " + r1 + " 0 " + large + " 1 " + p1.x.toFixed(2) + " " + p1.y.toFixed(2) + " L " + q1.x.toFixed(2) + " " + q1.y.toFixed(2) + " A " + r0 + " " + r0 + " 0 " + large + " 0 " + q0.x.toFixed(2) + " " + q0.y.toFixed(2) + " Z";
   }
   function drawDonut(el, byPlace, total) {
-    var html = '<svg viewBox="0 0 140 140" width="112" height="112" aria-hidden="true">';
-    html += '<circle cx="70" cy="70" r="46" fill="none" stroke="rgba(255,255,255,.08)" stroke-width="16"/>';
+    var g = el.querySelector(".slices");
+    if (!g) {
+      el.innerHTML = '<svg viewBox="0 0 140 140" width="112" height="112" aria-hidden="true"><circle class="donut-track" cx="70" cy="70" r="46" fill="none" stroke-width="16"/><g class="slices"></g></svg>';
+      g = el.querySelector(".slices");
+    }
+    var html = "";
     if (total > 0) {
       var angle = 0;
       Object.keys(PLACES).forEach(function (k) {
@@ -578,11 +603,10 @@
         var a0 = angle;
         var a1 = angle + sweep;
         angle = a1;
-        html += '<path data-place="' + k + '" d="' + donutPath(70, 70, 34, 58, a0, a1) + '" fill="' + PLACES[k].color + '" fill-rule="evenodd" stroke="rgba(9,9,11,.5)" stroke-width="1.2"/>';
+        html += '<path data-place="' + k + '" d="' + donutPath(70, 70, 34, 58, a0, a1) + '" fill="' + PLACES[k].color + '" fill-rule="evenodd" stroke="rgba(9,9,11,.35)" stroke-width="1.2"/>';
       });
     }
-    html += "</svg>";
-    el.innerHTML = html;
+    g.innerHTML = html;
   }
   function setPlatActive(id) {
     var sel = id || platFilter;
@@ -651,7 +675,7 @@
     });
     var mine = m.byPlaceWho[who] || emptyPlace();
     var total = m.byWho[who] || 0;
-    placeGrid.innerHTML = Object.keys(PLACES).filter(function (k) { return mine[k] > 0; }).map(function (k) {
+    placeGrid.innerHTML = Object.keys(PLACES).filter(function (k) { return k !== "other" || mine[k] > 0; }).map(function (k) {
       var pct = total > 0 ? Math.round((mine[k] / total) * 100) : 0;
       return '<button type="button" class="place" data-place="' + k + '"><div class="place-top">' + logo(k) + '<div class="place-meta"><div class="tiny">' + esc(PLACES[k].name) + " · " + pct + '%</div><div class="val" style="font-size:14px">' + rub(mine[k]) + "</div></div></div><div class=\"place-bar\"><span style=\"width:" + pct + "%;background:" + PLACES[k].color + '"></span></div></button>';
     }).join("");
