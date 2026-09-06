@@ -843,6 +843,7 @@
         return '<li><div><div>' + esc(x.label) + '</div><div class="tiny">положили ' + rub(x.inn) + ' · заправки ' + rub(x.out) + ' · остаток ' + rub(x.rest) + '</div></div></li>';
       }).join(""));
     }
+  }
 
   function persist() {
     try { localStorage.setItem(KEY, JSON.stringify(tx)); } catch (e) {}
