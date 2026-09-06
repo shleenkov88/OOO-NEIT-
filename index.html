@@ -115,6 +115,7 @@
       font-weight: 500;
       -webkit-appearance: none;
       appearance: none;
+      touch-action: manipulation;
     }
     button:focus { outline: none; }
     button:focus-visible {
@@ -201,6 +202,11 @@
       font-weight: 600;
       border: 0;
       box-shadow: 0 4px 16px rgba(255, 255, 255, 0.1);
+      min-height: 48px;
+    }
+    input.need {
+      border-color: var(--bad) !important;
+      box-shadow: 0 0 0 3px color-mix(in srgb, var(--bad) 25%, transparent);
     }
     .label { font-size: 12px; color: var(--muted); font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px; }
     .val { font-size: 22px; font-weight: 700; letter-spacing: -0.6px; margin-top: 4px; font-variant-numeric: tabular-nums; }
@@ -353,13 +359,18 @@
       border-radius: 16px;
     }
     @media (max-width: 480px) {
-      body { padding: 16px 12px 96px; }
+      body { padding: 16px 12px calc(120px + env(safe-area-inset-bottom, 0px)); }
       .card { padding: 14px; }
       .val { font-size: 18px; }
       .mini .val { font-size: 16px; }
       .row { font-size: 12px; padding: 7px 0; }
       .row b { font-size: 12px; }
       .grid4, .grid2, .grid3 { gap: 8px; }
+      #marketForm .primary, #fuelForm .primary, #form .primary {
+        position: sticky;
+        bottom: calc(8px + env(safe-area-inset-bottom, 0px));
+        z-index: 6;
+      }
     }
     @media (prefers-reduced-motion: reduce) {
       * { transition: none !important; }
@@ -447,7 +458,7 @@
       </div>
     </div>
     <div class="grid2">
-      <div><label>Сумма, ₽</label><input id="fuelAmount" type="number" min="1" required inputmode="numeric" /></div>
+      <div><label>Сумма, ₽</label><input id="fuelAmount" type="text" inputmode="numeric" pattern="[0-9]*" enterkeyhint="done" autocomplete="off" /></div>
       <div><label>Дата</label><input id="fuelDate" type="date" required /></div>
     </div>
     <div><label>Комментарий</label><input id="fuelComment" placeholder="Газпромнефть" /></div>
@@ -493,7 +504,7 @@
       <p class="tiny">Где купили</p>
       <div class="ops" id="placeOps"></div>
       <div class="grid2">
-        <div><label>Сумма, ₽</label><input id="marketAmount" type="number" min="1" required inputmode="numeric" /></div>
+        <div><label>Сумма, ₽</label><input id="marketAmount" type="text" inputmode="numeric" pattern="[0-9]*" enterkeyhint="done" autocomplete="off" /></div>
         <div><label>Дата</label><input id="marketDate" type="date" required /></div>
       </div>
       <div><label>Что купили</label><input id="marketComment" placeholder="Пылесос, кабель" /></div>
@@ -517,7 +528,7 @@
       <button type="button" class="op" data-type="salary">Выдали на руки</button>
     </div>
     <div class="grid2">
-      <div><label>Сумма, ₽</label><input id="amount" type="number" min="1" required inputmode="numeric" /></div>
+      <div><label>Сумма, ₽</label><input id="amount" type="text" inputmode="numeric" pattern="[0-9]*" enterkeyhint="done" autocomplete="off" /></div>
       <div><label>Дата</label><input id="date" type="date" required /></div>
     </div>
     <div id="partnerWrap" style="display:none">
@@ -684,6 +695,16 @@
   }
 
   function rub(n) { return new Intl.NumberFormat("ru-RU", { style: "currency", currency: "RUB", maximumFractionDigits: 0 }).format(Math.round(n || 0)); }
+  function money(n) {
+    var s = String(n == null ? "" : n).replace(/\s/g, "").replace(",", ".");
+    var v = parseFloat(s);
+    return Math.round(v > 0 ? v : 0);
+  }
+  function need(el) {
+    el.classList.add("need");
+    try { el.focus(); } catch (e) {}
+    setTimeout(function () { el.classList.remove("need"); }, 1400);
+  }
   function ymOf(d) { return String(d || "").slice(0, 7); }
   function thisYm() {
     var d = new Date();
@@ -991,20 +1012,23 @@
   form.onsubmit = function (e) {
     e.preventDefault();
     if (!director) return;
-    var amount = money(document.getElementById("amount").value); if (amount <= 0) return;
+    var amount = money(document.getElementById("amount").value);
+    if (amount <= 0) { need(document.getElementById("amount")); return; }
     tx.push({ id: Date.now().toString(36) + Math.random().toString(36).slice(2, 7), date: date.value, amount: amount, type: type, comment: comment.value.trim(), partner: (type === "salary" || type === "expense") ? partner : null, marketplace: null, purpose: null });
     document.getElementById("amount").value = ""; comment.value = ""; persist();
   };
   fuelForm.onsubmit = function (e) {
     e.preventDefault();
     if (fuelKind === "fuel" && !director) return;
-    var amount = money(fuelAmount.value); if (amount <= 0) return;
+    var amount = money(fuelAmount.value);
+    if (amount <= 0) { need(fuelAmount); return; }
     tx.push({ id: Date.now().toString(36) + Math.random().toString(36).slice(2, 7), date: fuelDate.value, amount: amount, type: fuelKind, comment: fuelComment.value.trim(), partner: fuelKind === "fuel" ? "natalia" : whoFuel, marketplace: null, purpose: null });
     fuelAmount.value = ""; fuelComment.value = ""; persist();
   };
   marketForm.onsubmit = function (e) {
     e.preventDefault();
-    var amount = money(marketAmount.value); if (amount <= 0) return;
+    var amount = money(marketAmount.value);
+    if (amount <= 0) { need(marketAmount); return; }
     var whoBtn = document.querySelector("#marketForm [data-who].on");
     var placeBtn = document.querySelector("#placeOps [data-place].on");
     var whoNow = (whoBtn && whoBtn.getAttribute("data-who")) || who || "nastya";
