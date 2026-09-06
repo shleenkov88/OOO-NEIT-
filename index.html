@@ -73,7 +73,7 @@
 <body>
 <div id="gate" class="modal" style="display:none"><div class="box">
   <p class="label">Наташа Тейковцева</p>
-  <h1 style="font-size:22px;margin:6px 0 14px">Вход директора</h1>
+  <h1 style="font-size:22px;margin:6px 0 14px">Пароль Наташи</h1>
   <input id="pass" type="password" inputmode="numeric" autocomplete="off" placeholder="Пароль" />
   <p id="passErr" class="tiny bad" style="display:none;margin-top:8px">Неверный пароль</p>
   <div class="grid2" style="margin-top:12px">
@@ -89,14 +89,14 @@
   </div>
   <div class="ops">
     <button class="chip" id="themeBtn" type="button">Светлая</button>
-    <button class="chip" id="roleBtn" type="button">Директор</button>
+    <button class="chip" id="roleBtn" type="button">Войти</button>
   </div>
 </header>
 <div id="fbWarn" class="warn">Нет связи с облаком. Пишу в память телефона.</div>
-<p id="guestNote" class="note">Просмотр. Можно записать топливо. Выручку вносит Наташа.</p>
+<p id="guestNote" class="note">Можно записать заправку. Положить на карту и внести деньги — у Наташи, кнопка «Войти».</p>
 
 <div class="grid4">
-  <div class="card"><div class="label">Выручка</div><div class="val" id="sIncome">0 ₽</div></div>
+  <div class="card"><div class="label">Пришло</div><div class="val" id="sIncome">0 ₽</div></div>
   <div class="card"><div class="label">К разделу</div><div class="val" id="sNet">0 ₽</div></div>
   <div class="card"><div class="label">Касса</div><div class="val" id="sCash">0 ₽</div></div>
   <div class="card"><div class="label">Топливо</div><div class="val" id="sCard">0 ₽</div></div>
@@ -127,16 +127,22 @@
     <div class="mini"><div class="label">Остаток</div><div class="val" id="sFuelCard">0 ₽</div></div>
   </div>
   <form id="fuelForm">
-    <div class="ops">
-      <button type="button" class="op on" data-fuel="fuel">Пополнить</button>
-      <button type="button" class="op" data-fuel="fuel_spend">Заправка</button>
+    <div class="ops" id="fuelOps">
+      <button type="button" class="op" data-fuel="fuel" id="fuelTopupBtn">Положить на карту</button>
+      <button type="button" class="op on" data-fuel="fuel_spend">Заправка</button>
+    </div>
+    <div id="fuelWhoWrap">
+      <div class="ops">
+        <button type="button" class="op on" data-fuelfor="nastya">Заправилась Настя</button>
+        <button type="button" class="op" data-fuelfor="natalia">Заправилась Наташа</button>
+      </div>
     </div>
     <div class="grid2">
       <div><label>Сумма, ₽</label><input id="fuelAmount" type="number" min="1" required inputmode="numeric" /></div>
       <div><label>Дата</label><input id="fuelDate" type="date" required /></div>
     </div>
-    <div><label>Комментарий</label><input id="fuelComment" placeholder="Газпромнефть, рейс" /></div>
-    <button class="primary" type="submit" id="fuelSubmit">Записать</button>
+    <div><label>Комментарий</label><input id="fuelComment" placeholder="Газпромнефть" /></div>
+    <button class="primary" type="submit" id="fuelSubmit">Записать заправку</button>
   </form>
   <ul id="fuelList"></ul>
 </section>
@@ -147,24 +153,17 @@
     <div class="grid2" id="placeGrid"></div>
     <form id="marketForm" style="display:none">
       <div class="ops">
-        <button type="button" class="op on" data-who="nastya">Настя</button>
-        <button type="button" class="op" data-who="natalia">Наташа</button>
+        <button type="button" class="op on" data-who="nastya">Купила Настя</button>
+        <button type="button" class="op" data-who="natalia">Купила Наташа</button>
       </div>
+      <p class="tiny">Где купили</p>
       <div class="ops" id="placeOps"></div>
-      <div class="ops">
-        <button type="button" class="op on" data-purpose="ads">Реклама</button>
-        <button type="button" class="op" data-purpose="commission">Комиссия</button>
-        <button type="button" class="op" data-purpose="goods">Закупка</button>
-        <button type="button" class="op" data-purpose="delivery">Доставка</button>
-        <button type="button" class="op" data-purpose="pack">Упаковка</button>
-        <button type="button" class="op" data-purpose="other">Прочее</button>
-      </div>
       <div class="grid2">
         <div><label>Сумма, ₽</label><input id="marketAmount" type="number" min="1" required inputmode="numeric" /></div>
         <div><label>Дата</label><input id="marketDate" type="date" required /></div>
       </div>
-      <div><label>Комментарий</label><input id="marketComment" /></div>
-      <button class="primary" type="submit">Записать</button>
+      <div><label>Что купили</label><input id="marketComment" placeholder="Пылесос, кабель" /></div>
+      <button class="primary" type="submit">Записать покупку</button>
     </form>
     <ul id="marketList"></ul>
   </div>
@@ -178,9 +177,9 @@
 <section id="panelWork" class="card">
   <form id="form">
     <div class="ops">
-      <button type="button" class="op on" data-type="income">Выручка</button>
-      <button type="button" class="op" data-type="expense">Расход</button>
-      <button type="button" class="op" data-type="salary">Выдать</button>
+      <button type="button" class="op on" data-type="income">Деньги пришли</button>
+      <button type="button" class="op" data-type="expense">Кто-то потратил</button>
+      <button type="button" class="op" data-type="salary">Выдали на руки</button>
     </div>
     <div class="grid2">
       <div><label>Сумма, ₽</label><input id="amount" type="number" min="1" required inputmode="numeric" /></div>
@@ -188,15 +187,15 @@
     </div>
     <div id="partnerWrap" style="display:none">
       <div class="ops">
-        <button type="button" class="op on" data-partner="nastya">Настя</button>
-        <button type="button" class="op" data-partner="natalia">Наташа</button>
+        <button type="button" class="op on" data-partner="nastya" id="pNastya">Насте</button>
+        <button type="button" class="op" data-partner="natalia" id="pNatalia">Наташе</button>
       </div>
     </div>
-    <div><label>Комментарий</label><input id="comment" placeholder="Откуда пришло" /></div>
-    <button class="primary" type="submit" id="cashSubmit">Внести выручку</button>
+    <div><label>Комментарий</label><input id="comment" placeholder="Откуда деньги" /></div>
+    <button class="primary" type="submit" id="cashSubmit">Записать приход</button>
   </form>
 </section>
-<p id="workGuest" class="note" style="display:none">Выручку и выдачу вносит Наташа.</p>
+<p id="workGuest" class="note" style="display:none">Приход и выдачу на руки пишет Наташа.</p>
 
 <section id="panelLog" class="card" style="display:none">
   <div style="display:flex;gap:8px;margin-bottom:10px">
@@ -207,7 +206,7 @@
   <p id="empty" class="tiny" style="padding:16px 0;display:none">Пока пусто</p>
 </section>
 
-<footer class="foot">Наташа как директор вносит выручку. После топлива сумма делится 70% Насте и 30% Наташе. Личный расход и траты площадок идут с доли того, кто потратил. Топливо могут записать обе. Правки кассы — только у Наташи.</footer>
+<footer class="foot">Наташа вносит пришедшие деньги и кладёт сумму на топливо. Дальше делёж 70% Насте и 30% Наташе. Покупки — с доли того, кто купил. Заправляются обе.</footer>
 
 <script>
 (function () {
@@ -227,12 +226,12 @@
     other: { name: "Другое", short: "·", color: "#71717a" }
   };
   var PURP = { ads: "Реклама", commission: "Комиссия", goods: "Закупка", delivery: "Доставка", pack: "Упаковка", other: "Прочее" };
-  var LABELS = { income: "выручка", fuel: "топливо", fuel_spend: "заправка", expense: "расход", market: "площадка", salary: "выдано", personal: "изъятие" };
+  var LABELS = { income: "пришло", fuel: "на карту", fuel_spend: "заправка", expense: "потратили", market: "покупка", salary: "на руки", personal: "изъятие" };
   firebase.initializeApp({ apiKey: "AIzaSyCSME5fUFOS6R80-2-wEgOyAUyJx1M0a1A", authDomain: "neit-41882.firebaseapp.com", projectId: "neit-41882", storageBucket: "neit-41882.firebasestorage.app", messagingSenderId: "478613249008", appId: "1:478613249008:web:42f214670ccc00a4935b35", databaseURL: "https://neit-41882-default-rtdb.europe-west1.firebasedatabase.app/" });
   var ref = firebase.database().ref("transactions");
   var tx = [];
   var director = false;
-  var type = "income", fuelKind = "fuel", who = "nastya", place = "wb", purpose = "ads", partner = "nastya";
+  var type = "income", fuelKind = "fuel_spend", who = "nastya", whoFuel = "nastya", place = "wb", partner = "nastya";
   var platOpen = false;
 
   function rub(n) { return new Intl.NumberFormat("ru-RU", { style: "currency", currency: "RUB", maximumFractionDigits: 0 }).format(Math.round(n || 0)); }
@@ -250,7 +249,6 @@
     var ow = ownerOf(t);
     if (ow) bits.push(NAMES[ow]);
     if (t.marketplace && PLACES[t.marketplace]) bits.push(PLACES[t.marketplace].name);
-    if (t.purpose && PURP[t.purpose]) bits.push(PURP[t.purpose]);
     return bits.join(" · ");
   }
   function logo(id) {
@@ -290,11 +288,18 @@
 
   function setRoleUI() {
     guestNote.style.display = director ? "none" : "block";
-    roleBtn.textContent = director ? "Наташа" : "Директор";
-    roleBtn.className = director ? "primary" : "chip";
+    roleBtn.textContent = director ? "Выйти" : "Войти";
+    roleBtn.className = "chip";
+    fuelTopupBtn.style.display = director ? "" : "none";
+    if (!director) {
+      fuelKind = "fuel_spend";
+      document.querySelectorAll("#fuelOps [data-fuel]").forEach(function (b) { b.classList.toggle("on", b.getAttribute("data-fuel") === "fuel_spend"); });
+    }
+    fuelWhoWrap.style.display = fuelKind === "fuel_spend" ? "block" : "none";
+    fuelSubmit.textContent = fuelKind === "fuel" ? "Положить на карту" : "Записать заправку";
     form.style.display = director ? "grid" : "none";
     workGuest.style.display = director ? "none" : "block";
-    marketForm.style.display = director ? "grid" : "none";
+    marketForm.style.display = platOpen ? "grid" : "none";
     panelWork.style.display = document.querySelector('.tabs button.on').getAttribute("data-tab") === "work" && director ? "block" : "none";
     if (document.querySelector('.tabs button.on').getAttribute("data-tab") === "work" && !director) workGuest.style.display = "block";
   }
@@ -421,12 +426,19 @@
   group("#panelWork [data-type]", "data-type", function (v) {
     type = v;
     partnerWrap.style.display = (v === "salary" || v === "expense") ? "block" : "none";
-    cashSubmit.textContent = v === "income" ? "Внести выручку" : "Записать";
+    cashSubmit.textContent = v === "income" ? "Записать приход" : v === "salary" ? "Выдать" : "Записать трату";
+    comment.placeholder = v === "income" ? "Откуда деньги" : "Что купили";
+    pNastya.textContent = v === "salary" ? "Насте" : "Потратила Настя";
+    pNatalia.textContent = v === "salary" ? "Наташе" : "Потратила Наташа";
   });
-  group("#fuelForm [data-fuel]", "data-fuel", function (v) { fuelKind = v; });
+  group("#fuelForm [data-fuel]", "data-fuel", function (v) {
+    fuelKind = v;
+    fuelWhoWrap.style.display = v === "fuel_spend" ? "block" : "none";
+    fuelSubmit.textContent = v === "fuel" ? "Положить на карту" : "Записать заправку";
+  });
+  group("#fuelWhoWrap [data-fuelfor]", "data-fuelfor", function (v) { whoFuel = v; });
   group("#marketForm [data-who]", "data-who", function (v) { who = v; });
   group("#placeOps [data-place]", "data-place", function (v) { place = v; });
-  group("#marketForm [data-purpose]", "data-purpose", function (v) { purpose = v; });
   group("#partnerWrap [data-partner]", "data-partner", function (v) { partner = v; });
   document.querySelectorAll(".tabs button").forEach(function (b) {
     b.onclick = function () {
@@ -447,15 +459,16 @@
   };
   fuelForm.onsubmit = function (e) {
     e.preventDefault();
+    if (fuelKind === "fuel" && !director) return;
     var amount = money(fuelAmount.value); if (amount <= 0) return;
-    tx.push({ id: Date.now().toString(36) + Math.random().toString(36).slice(2, 7), date: fuelDate.value, amount: amount, type: fuelKind, comment: fuelComment.value.trim(), partner: director ? "natalia" : "nastya", marketplace: null, purpose: null });
+    tx.push({ id: Date.now().toString(36) + Math.random().toString(36).slice(2, 7), date: fuelDate.value, amount: amount, type: fuelKind, comment: fuelComment.value.trim(), partner: fuelKind === "fuel" ? "natalia" : whoFuel, marketplace: null, purpose: null });
     fuelAmount.value = ""; fuelComment.value = ""; persist();
   };
   marketForm.onsubmit = function (e) {
     e.preventDefault();
     if (!director) return;
     var amount = money(marketAmount.value); if (amount <= 0) return;
-    tx.push({ id: Date.now().toString(36) + Math.random().toString(36).slice(2, 7), date: marketDate.value, amount: amount, type: "market", partner: who, marketplace: place, purpose: purpose, comment: marketComment.value.trim() });
+    tx.push({ id: Date.now().toString(36) + Math.random().toString(36).slice(2, 7), date: marketDate.value, amount: amount, type: "market", partner: who, marketplace: place, purpose: null, comment: marketComment.value.trim() });
     marketAmount.value = ""; marketComment.value = ""; persist();
   };
   exportBtn.onclick = function () {
