@@ -27,20 +27,20 @@
       --radius: 20px;
     }
     html[data-theme="light"] {
-      --bg: #f4f4f6;
-      --surface: rgba(255, 255, 255, 0.75);
-      --surface-hover: rgba(255, 255, 255, 0.9);
-      --elevated: rgba(230, 230, 235, 0.7);
-      --fg: #09090b;
-      --muted: #71717a;
-      --subtle: #a1a1aa;
-      --border: rgba(0, 0, 0, 0.08);
-      --accent: #09090b;
+      --bg: #eef0f3;
+      --surface: #ffffff;
+      --surface-hover: #ffffff;
+      --elevated: #f3f4f6;
+      --fg: #111113;
+      --muted: #3f3f46;
+      --subtle: #52525b;
+      --border: rgba(0, 0, 0, 0.12);
+      --accent: #111113;
       --accent-fg: #ffffff;
-      --ok: #28a745;
-      --bad: #dc3545;
+      --ok: #15803d;
+      --bad: #b42318;
       --ink: #18181b;
-      --shadow: 0 12px 32px -8px rgba(0, 0, 0, 0.08);
+      --shadow: 0 10px 28px -12px rgba(0, 0, 0, 0.16);
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
     html, body {
@@ -102,6 +102,40 @@
       border-color: var(--fg);
       box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.15);
       background: var(--surface-hover);
+    }
+    html[data-theme="light"] input:focus,
+    html[data-theme="light"] select:focus,
+    html[data-theme="light"] textarea:focus {
+      box-shadow: 0 0 0 3px rgba(17, 17, 19, 0.12);
+    }
+    html[data-theme="light"] body,
+    html[data-theme="light"] .card,
+    html[data-theme="light"] .box,
+    html[data-theme="light"] .val,
+    html[data-theme="light"] .row,
+    html[data-theme="light"] h1,
+    html[data-theme="light"] h2,
+    html[data-theme="light"] button,
+    html[data-theme="light"] input,
+    html[data-theme="light"] select,
+    html[data-theme="light"] textarea {
+      color: #111113;
+    }
+    html[data-theme="light"] .label,
+    html[data-theme="light"] .tiny,
+    html[data-theme="light"] .sub,
+    html[data-theme="light"] .pct,
+    html[data-theme="light"] .note,
+    html[data-theme="light"] .foot,
+    html[data-theme="light"] label {
+      color: #3f3f46;
+    }
+    html[data-theme="light"] .chip.on,
+    html[data-theme="light"] .op.on,
+    html[data-theme="light"] .tabs button.on,
+    html[data-theme="light"] .primary {
+      background: #111113;
+      color: #ffffff;
     }
     .chip, .op {
       padding: 8px 16px;
@@ -232,7 +266,7 @@
   </div>
 </header>
 <div id="fbWarn" class="warn">Нет связи с облаком. Пишу в память телефона.</div>
-<p id="guestNote" class="note">Можно записать заправку. Положить на карту и внести деньги — у Наташи, кнопка «Войти».</p>
+<p id="guestNote" class="note">Можно записать заправку и покупку. Приход и выдачу пишет Наташа — кнопка «Войти».</p>
 
 <div class="grid4">
   <div class="card"><div class="label">Пришло</div><div class="val" id="sIncome">0 ₽</div></div>
@@ -444,6 +478,12 @@
   function bindPlat() {
     function pick(id) {
       platFilter = platFilter === id ? null : id;
+      if (platFilter) {
+        place = platFilter;
+        document.querySelectorAll("#placeOps [data-place]").forEach(function (b) {
+          b.classList.toggle("on", b.getAttribute("data-place") === platFilter);
+        });
+      }
       renderLists();
       setPlatActive(platFilter);
     }
@@ -711,9 +751,14 @@
   };
   marketForm.onsubmit = function (e) {
     e.preventDefault();
-    if (!director) return;
     var amount = money(marketAmount.value); if (amount <= 0) return;
-    tx.push({ id: Date.now().toString(36) + Math.random().toString(36).slice(2, 7), date: marketDate.value, amount: amount, type: "market", partner: who, marketplace: place, purpose: null, comment: marketComment.value.trim() });
+    var whoBtn = document.querySelector("#marketForm [data-who].on");
+    var placeBtn = document.querySelector("#placeOps [data-place].on");
+    var whoNow = (whoBtn && whoBtn.getAttribute("data-who")) || who || "nastya";
+    var placeNow = (placeBtn && placeBtn.getAttribute("data-place")) || place || "wb";
+    who = whoNow;
+    place = placeNow;
+    tx.push({ id: Date.now().toString(36) + Math.random().toString(36).slice(2, 7), date: marketDate.value, amount: amount, type: "market", partner: whoNow, marketplace: placeNow, purpose: null, comment: marketComment.value.trim() });
     marketAmount.value = ""; marketComment.value = ""; persist();
   };
   exportBtn.onclick = function () {
