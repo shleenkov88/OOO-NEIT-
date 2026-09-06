@@ -548,8 +548,10 @@
   <div style="display:flex;gap:8px;margin-bottom:10px">
     <select id="monthFilter"><option value="all">Все месяцы</option></select>
     <button class="chip" id="exportBtn" type="button">CSV</button>
+    <button class="chip" id="restoreBtn" type="button" style="display:none">Вернуть</button>
     <button class="chip bad" id="resetBtn" type="button" style="display:none">Сброс</button>
   </div>
+  <input id="restoreFile" type="file" accept="application/json,.json" style="display:none" />
   <ul id="list"></ul>
   <p id="empty" class="tiny" style="padding:16px 0;display:none">Пока пусто</p>
 </section>
@@ -799,6 +801,7 @@
     roleBtn.textContent = director ? "Выйти" : "Войти";
     roleBtn.className = "chip";
     resetBtn.style.display = director ? "inline-flex" : "none";
+    restoreBtn.style.display = director ? "inline-flex" : "none";
     fuelTopupBtn.style.display = director ? "" : "none";
     if (!director) {
       fuelKind = "fuel_spend";
@@ -1073,6 +1076,32 @@
     try { localStorage.setItem(KEY, "[]"); } catch (e) {}
     try { ref.remove(); } catch (e) { fbWarn.style.display = "block"; }
     render();
+  };
+  restoreBtn.onclick = function () {
+    if (!director) return;
+    restoreFile.click();
+  };
+  restoreFile.onchange = function () {
+    if (!director) return;
+    var f = restoreFile.files && restoreFile.files[0];
+    restoreFile.value = "";
+    if (!f) return;
+    var reader = new FileReader();
+    reader.onload = function () {
+      try {
+        var data = JSON.parse(String(reader.result || "[]"));
+        var list = Array.isArray(data) ? data : null;
+        if (!list) { alert("Это не архив кассы. Нужен файл, который скачался при сбросе."); return; }
+        list = list.filter(function (t) { return t && t.type && t.amount != null; });
+        if (!list.length) { alert("В файле нет записей."); return; }
+        if (!confirm("Вернуть " + list.length + " записей? То, что сейчас в кассе, заменится архивом.")) return;
+        tx = list;
+        persist();
+      } catch (err) {
+        alert("Файл не открылся. Возьмите JSON, который касса скачала сама.");
+      }
+    };
+    reader.readAsText(f);
   };
   monthFilter.onchange = renderLists;
   searchInput.oninput = renderLists;
