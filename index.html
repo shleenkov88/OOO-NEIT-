@@ -377,12 +377,15 @@
 <section class="card">
   <div class="fuel-head">
     <img class="gpn-full" src="gazprom-neft.png" alt="Газпромнефть">
-    <h2>Топливо</h2>
+    <div>
+      <h2>Топливо</h2>
+      <div class="tiny" id="fuelMonthLabel">этот месяц</div>
+    </div>
   </div>
   <div class="grid3" style="margin-top:12px">
-    <div class="mini"><div class="label">Пополнено</div><div class="val" id="sFuelIn">0 ₽</div></div>
-    <div class="mini"><div class="label">Списано</div><div class="val" id="sFuelOut">0 ₽</div></div>
-    <div class="mini"><div class="label">Остаток</div><div class="val" id="sFuelCard">0 ₽</div></div>
+    <div class="mini"><div class="label">Пополнено</div><div class="val" id="sFuelIn">0 ₽</div><div class="tiny">в этом месяце</div></div>
+    <div class="mini"><div class="label">Списано</div><div class="val" id="sFuelOut">0 ₽</div><div class="tiny">в этом месяце</div></div>
+    <div class="mini"><div class="label">Остаток</div><div class="val" id="sFuelCard">0 ₽</div><div class="tiny">на карте сейчас</div></div>
   </div>
   <form id="fuelForm">
     <div class="ops" id="fuelOps">
@@ -620,7 +623,18 @@
   }
 
   function rub(n) { return new Intl.NumberFormat("ru-RU", { style: "currency", currency: "RUB", maximumFractionDigits: 0 }).format(Math.round(n || 0)); }
-  function money(n) { return Math.round(Number(n) || 0); }
+  function ymOf(d) { return String(d || "").slice(0, 7); }
+  function thisYm() {
+    var d = new Date();
+    return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0");
+  }
+  function monthName(ym) {
+    var names = ["январь", "февраль", "март", "апрель", "май", "июнь", "июль", "август", "сентябрь", "октябрь", "ноябрь", "декабрь"];
+    var p = String(ym).split("-");
+    var i = Number(p[1]) - 1;
+    if (!p[0] || i < 0 || i > 11) return ym;
+    return names[i] + " " + p[0];
+  }
   function esc(s) { var d = document.createElement("div"); d.textContent = s == null ? "" : String(s); return d.innerHTML; }
   function ownerOf(t) {
     if (t.partner === "nastya" || t.partner === "natalia") return t.partner;
@@ -641,18 +655,30 @@
     return '<span class="logo" style="background:' + p.color + '">' + esc(p.short.slice(0, 2)) + "</span>";
   }
   function metrics() {
-    var income = 0, fuel = 0, fuelSpend = 0, commonExpense = 0, market = 0;
+    var income = 0, fuel = 0, fuelSpend = 0, fuelMonth = 0, fuelSpendMonth = 0, commonExpense = 0, market = 0;
     var paid = { nastya: 0, natalia: 0 };
     var personal = { nastya: 0, natalia: 0 };
     var byWho = { nastya: 0, natalia: 0 };
     var byPlace = emptyPlace();
     var byPlaceWho = { nastya: emptyPlace(), natalia: emptyPlace() };
+    var byFuelMo = {};
+    var nowYm = thisYm();
     for (var i = 0; i < tx.length; i++) {
       var t = tx[i], a = money(t.amount);
       if (t.type === "income") income += a;
-      else if (t.type === "fuel") fuel += a;
-      else if (t.type === "fuel_spend") fuelSpend += a;
-      else if (t.type === "expense") {
+      else if (t.type === "fuel") {
+        fuel += a;
+        var fmo = ymOf(t.date);
+        if (!byFuelMo[fmo]) byFuelMo[fmo] = { inn: 0, out: 0 };
+        byFuelMo[fmo].inn += a;
+        if (fmo === nowYm) fuelMonth += a;
+      } else if (t.type === "fuel_spend") {
+        fuelSpend += a;
+        var smo = ymOf(t.date);
+        if (!byFuelMo[smo]) byFuelMo[smo] = { inn: 0, out: 0 };
+        byFuelMo[smo].out += a;
+        if (smo === nowYm) fuelSpendMonth += a;
+      } else if (t.type === "expense") {
         var ew = ownerOf(t);
         if (ew) personal[ew] += a; else commonExpense += a;
       } else if (t.type === "market") {
@@ -668,8 +694,18 @@
     }
     var net = income - fuel - commonExpense;
     var shares = { nastya: net * SHARE.nastya, natalia: net * SHARE.natalia };
+    var keys = Object.keys(byFuelMo).sort();
+    var rest = 0;
+    var fuelMonths = [];
+    for (var k = 0; k < keys.length; k++) {
+      var key = keys[k];
+      rest += byFuelMo[key].inn - byFuelMo[key].out;
+      fuelMonths.push({ key: key, label: monthName(key), inn: byFuelMo[key].inn, out: byFuelMo[key].out, rest: rest });
+    }
+    fuelMonths.reverse();
     return {
-      income: income, fuel: fuel, fuelSpend: fuelSpend, card: fuel - fuelSpend, market: market, net: net,
+      income: income, fuel: fuel, fuelSpend: fuelSpend, fuelMonth: fuelMonth, fuelSpendMonth: fuelSpendMonth,
+      card: fuel - fuelSpend, market: market, net: net, fuelMonths: fuelMonths, nowYm: nowYm,
       personal: personal, paid: paid, shares: shares, byWho: byWho, byPlace: byPlace, byPlaceWho: byPlaceWho,
       bal: { nastya: shares.nastya - paid.nastya - personal.nastya, natalia: shares.natalia - paid.natalia - personal.natalia },
       cash: net - paid.nastya - paid.natalia - personal.nastya - personal.natalia
@@ -701,10 +737,11 @@
     sNet.textContent = rub(m.net);
     sCash.textContent = rub(m.cash);
     sCard.textContent = rub(m.card);
-    sFuelIn.textContent = rub(m.fuel);
-    sFuelOut.textContent = rub(m.fuelSpend);
+    sFuelIn.textContent = rub(m.fuelMonth);
+    sFuelOut.textContent = rub(m.fuelSpendMonth);
     sFuelCard.textContent = rub(m.card);
     sFuelCard.className = "val " + (m.card < 0 ? "bad" : "ok");
+    fuelMonthLabel.textContent = monthName(m.nowYm);
     shareNastya.textContent = rub(m.shares.nastya);
     shareNatalia.textContent = rub(m.shares.natalia);
     persNastya.textContent = rub(m.personal.nastya);
@@ -795,8 +832,17 @@
     fill(marketList, tx.filter(function (t) {
       return t.type === "market" && ownerOf(t) === who && (!platFilter || t.marketplace === platFilter);
     }).sort(function (a, b) { return String(b.date || "").localeCompare(String(a.date || "")); }));
-    fill(fuelList, tx.filter(function (t) { return t.type === "fuel" || t.type === "fuel_spend"; }).sort(function (a, b) { return String(b.date || "").localeCompare(String(a.date || "")); }).slice(0, 4));
-  }
+    var now = thisYm();
+    var fuelNow = tx.filter(function (t) {
+      return (t.type === "fuel" || t.type === "fuel_spend") && ymOf(t.date) === now;
+    }).sort(function (a, b) { return String(b.date || "").localeCompare(String(a.date || "")); });
+    fill(fuelList, fuelNow);
+    var past = metrics().fuelMonths.filter(function (x) { return x.key !== now; });
+    if (past.length) {
+      fuelList.insertAdjacentHTML("beforeend", '<li><div class="tiny">Прошлые месяцы — лежат в истории</div></li>' + past.map(function (x) {
+        return '<li><div><div>' + esc(x.label) + '</div><div class="tiny">положили ' + rub(x.inn) + ' · заправки ' + rub(x.out) + ' · остаток ' + rub(x.rest) + '</div></div></li>';
+      }).join(""));
+    }
 
   function persist() {
     try { localStorage.setItem(KEY, JSON.stringify(tx)); } catch (e) {}
