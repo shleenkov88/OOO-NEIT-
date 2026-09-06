@@ -236,7 +236,32 @@
     .tiny { font-size: 12px; color: var(--muted); }
     .foot { color: var(--subtle); font-size: 12px; line-height: 1.5; margin-top: 24px; }
     .note { background: var(--elevated); border-radius: 14px; padding: 12px 14px; font-size: 13px; color: var(--muted); margin-bottom: 12px; }
-    .sum { width: 100%; display: flex; justify-content: space-between; align-items: center; background: none; border: 0; padding: 0; min-height: 32px; font-weight: 600; }
+    .donut-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 14px; }
+    .donut-card {
+      background: var(--elevated);
+      border-radius: 16px;
+      padding: 12px 10px 14px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      gap: 2px;
+    }
+    .donut-card .val { font-size: 16px; margin-top: 2px; }
+    .donut svg { width: 112px; height: 112px; }
+    .sum {
+      width: 100%;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: var(--elevated);
+      border: 1px solid var(--border);
+      padding: 16px 18px;
+      min-height: 56px;
+      font-weight: 600;
+      font-size: 16px;
+      border-radius: 16px;
+    }
     @media (prefers-reduced-motion: reduce) {
       * { transition: none !important; }
       button:active { transform: none; }
@@ -323,18 +348,25 @@
 </section>
 
 <section class="card">
-  <button class="sum" type="button" id="platToggle"><span>Площадки</span><span class="tiny" id="platSum">0 ₽ · открыть</span></button>
-  <div id="platBody" style="display:none;margin-top:14px">
-    <div class="donut-wrap">
-      <div class="donut" id="platDonut"></div>
-      <div>
-        <div class="tiny">Покупки</div>
-        <div class="val" id="donutTotal">0 ₽</div>
-        <div class="tiny" id="donutHint">все площадки</div>
+  <button class="sum" type="button" id="platToggle">
+    <span>Площадки<br><span class="tiny" id="platSum">0 ₽</span></span>
+    <span class="tiny" id="platToggleLabel">Свернуть</span>
+  </button>
+  <div id="platBody" style="margin-top:14px">
+    <div class="donut-row">
+      <div class="donut-card">
+        <div class="donut" id="donutNastya"></div>
+        <div class="tiny">Настя</div>
+        <div class="val" id="totalNastyaM">0 ₽</div>
+      </div>
+      <div class="donut-card">
+        <div class="donut" id="donutNatalia"></div>
+        <div class="tiny">Наташа</div>
+        <div class="val" id="totalNataliaM">0 ₽</div>
       </div>
     </div>
     <div class="grid2" id="placeGrid"></div>
-    <form id="marketForm" style="display:none">
+    <form id="marketForm">
       <div class="ops">
         <button type="button" class="op on" data-who="nastya">Купила Настя</button>
         <button type="button" class="op" data-who="natalia">Купила Наташа</button>
@@ -417,9 +449,10 @@
   var tx = [];
   var director = false;
   var type = "income", fuelKind = "fuel_spend", who = "nastya", whoFuel = "nastya", place = "wb", partner = "nastya";
-  var platOpen = false;
+  var platOpen = true;
   var platFilter = null;
 
+  function emptyPlace() { return { wb: 0, ozon: 0, vi: 0, ym: 0, ali: 0, avito: 0, other: 0 }; }
   function polar(cx, cy, r, a) {
     var rad = (a - 90) * Math.PI / 180;
     return { x: cx + r * Math.cos(rad), y: cy + r * Math.sin(rad) };
@@ -434,8 +467,8 @@
     var q0 = polar(cx, cy, r0, a0), q1 = polar(cx, cy, r0, a1);
     return "M " + p0.x.toFixed(2) + " " + p0.y.toFixed(2) + " A " + r1 + " " + r1 + " 0 " + large + " 1 " + p1.x.toFixed(2) + " " + p1.y.toFixed(2) + " L " + q1.x.toFixed(2) + " " + q1.y.toFixed(2) + " A " + r0 + " " + r0 + " 0 " + large + " 0 " + q0.x.toFixed(2) + " " + q0.y.toFixed(2) + " Z";
   }
-  function drawDonut(byPlace, total) {
-    var html = '<svg viewBox="0 0 140 140" width="132" height="132" aria-hidden="true">';
+  function drawDonut(el, byPlace, total) {
+    var html = '<svg viewBox="0 0 140 140" width="112" height="112" aria-hidden="true">';
     html += '<circle cx="70" cy="70" r="46" fill="none" stroke="rgba(255,255,255,.08)" stroke-width="16"/>';
     if (total > 0) {
       var angle = 0;
@@ -450,12 +483,11 @@
       });
     }
     html += "</svg>";
-    platDonut.innerHTML = html;
+    el.innerHTML = html;
   }
   function setPlatActive(id) {
     var sel = id || platFilter;
-    donutHint.textContent = sel && PLACES[sel] ? PLACES[sel].name : "все площадки";
-    platDonut.querySelectorAll("[data-place]").forEach(function (el) {
+    document.querySelectorAll(".donut [data-place]").forEach(function (el) {
       var on = !sel || el.getAttribute("data-place") === sel;
       el.style.opacity = on ? "1" : "0.28";
       el.classList.toggle("hot", !!sel && on);
@@ -487,7 +519,7 @@
       renderLists();
       setPlatActive(platFilter);
     }
-    platDonut.querySelectorAll("[data-place]").forEach(function (el) {
+    document.querySelectorAll(".donut [data-place]").forEach(function (el) {
       var id = el.getAttribute("data-place");
       el.onmouseenter = function () { setPlatActive(id); };
       el.onmouseleave = function () { setPlatActive(null); };
@@ -528,7 +560,8 @@
     var paid = { nastya: 0, natalia: 0 };
     var personal = { nastya: 0, natalia: 0 };
     var byWho = { nastya: 0, natalia: 0 };
-    var byPlace = { wb: 0, ozon: 0, vi: 0, ym: 0, ali: 0, avito: 0, other: 0 };
+    var byPlace = emptyPlace();
+    var byPlaceWho = { nastya: emptyPlace(), natalia: emptyPlace() };
     for (var i = 0; i < tx.length; i++) {
       var t = tx[i], a = money(t.amount);
       if (t.type === "income") income += a;
@@ -540,7 +573,11 @@
       } else if (t.type === "market") {
         market += a;
         var mw = ownerOf(t);
-        if (mw) { personal[mw] += a; byWho[mw] += a; } else commonExpense += a;
+        if (mw) {
+          personal[mw] += a;
+          byWho[mw] += a;
+          if (t.marketplace && byPlaceWho[mw][t.marketplace] != null) byPlaceWho[mw][t.marketplace] += a;
+        } else commonExpense += a;
         if (byPlace[t.marketplace] != null) byPlace[t.marketplace] += a;
       } else if ((t.type === "salary" || t.type === "personal") && paid[t.partner] != null) paid[t.partner] += a;
     }
@@ -548,7 +585,7 @@
     var shares = { nastya: net * SHARE.nastya, natalia: net * SHARE.natalia };
     return {
       income: income, fuel: fuel, fuelSpend: fuelSpend, card: fuel - fuelSpend, market: market, net: net,
-      personal: personal, paid: paid, shares: shares, byWho: byWho, byPlace: byPlace,
+      personal: personal, paid: paid, shares: shares, byWho: byWho, byPlace: byPlace, byPlaceWho: byPlaceWho,
       bal: { nastya: shares.nastya - paid.nastya - personal.nastya, natalia: shares.natalia - paid.natalia - personal.natalia },
       cash: net - paid.nastya - paid.natalia - personal.nastya - personal.natalia
     };
@@ -595,10 +632,14 @@
     balNatalia.className = m.bal.natalia >= 0 ? "ok" : "bad";
     pBarNastya.style.width = (m.shares.nastya > 0 ? Math.min(100, Math.max(0, ((m.paid.nastya + m.personal.nastya) / m.shares.nastya) * 100)) : 0) + "%";
     pBarNatalia.style.width = (m.shares.natalia > 0 ? Math.min(100, Math.max(0, ((m.paid.natalia + m.personal.natalia) / m.shares.natalia) * 100)) : 0) + "%";
-    platSum.textContent = rub(m.market) + (platOpen ? " · свернуть" : " · открыть");
-    donutTotal.textContent = rub(m.market);
-    drawDonut(m.byPlace, m.market);
-    placeGrid.innerHTML = Object.keys(PLACES).filter(function (k) { return k !== "other" || m.byPlace[k] > 0; }).map(function (k) {
+    platSum.textContent = rub(m.market);
+    platToggleLabel.textContent = platOpen ? "Свернуть" : "Открыть";
+    platBody.style.display = platOpen ? "block" : "none";
+    totalNastyaM.textContent = rub(m.byWho.nastya);
+    totalNataliaM.textContent = rub(m.byWho.natalia);
+    drawDonut(donutNastya, m.byPlaceWho.nastya, m.byWho.nastya);
+    drawDonut(donutNatalia, m.byPlaceWho.natalia, m.byWho.natalia);
+    placeGrid.innerHTML = Object.keys(PLACES).filter(function (k) { return m.byPlace[k] > 0; }).map(function (k) {
       var pct = m.market > 0 ? Math.round((m.byPlace[k] / m.market) * 100) : 0;
       return '<button type="button" class="place" data-place="' + k + '"><div class="place-top">' + logo(k) + '<div class="place-meta"><div class="tiny">' + esc(PLACES[k].name) + " · " + pct + '%</div><div class="val" style="font-size:14px">' + rub(m.byPlace[k]) + "</div></div></div><div class=\"place-bar\"><span style=\"width:" + pct + "%;background:" + PLACES[k].color + '"></span></div></button>';
     }).join("");
@@ -705,6 +746,7 @@
   platToggle.onclick = function () {
     platOpen = !platOpen;
     platBody.style.display = platOpen ? "block" : "none";
+    platToggleLabel.textContent = platOpen ? "Свернуть" : "Открыть";
     render();
   };
 
