@@ -509,7 +509,7 @@
     </div>
     <div><label>Комментарий</label><input id="fuelComment" placeholder="Газпромнефть" /></div>
     <button class="primary" type="submit" id="fuelSubmit">Записать заправку</button>
-    <p class="tiny">Положить на карту = выдача Наташе. Заправки снимают только с карты, прибыль ещё раз не режут.</p>
+    <p class="tiny">Пополнение — из общей кассы на двоих. Заправки снимают только с карты, с долей ещё раз не списываются.</p>
   </form>
   <ul id="fuelList"></ul>
 </section>
@@ -635,7 +635,7 @@
   <p id="empty" class="tiny" style="padding:16px 0;display:none">Пока пусто</p>
 </section>
 
-<footer class="foot">Деньги делим: Насте 70%, Наташе 30%. Топливо на карту — это выдача Наташе. Депозит Я.Маркета — из общей кассы. Ozon и прочие траты снимаются с доли той, кто купил.</footer>
+<footer class="foot">Деньги делим: Насте 70%, Наташе 30%. Топливо и депозит Я.Маркета — из общей кассы. Ozon и прочее снимаются с доли той, кто купил.</footer>
 
 <script>
 (function () {
@@ -841,7 +841,6 @@
       if (t.type === "income") income += a;
       else if (t.type === "fuel") {
         fuel += a;
-        paid.natalia += a;
         var fmo = ymOf(t.date);
         if (!byFuelMo[fmo]) byFuelMo[fmo] = { inn: 0, out: 0 };
         byFuelMo[fmo].inn += a;
@@ -888,7 +887,7 @@
         if (byPlace[mp] != null) byPlace[mp] += a;
       } else if ((t.type === "salary" || t.type === "personal") && paid[t.partner] != null) paid[t.partner] += a;
     }
-    var net = income - ymIn - commonExpense;
+    var net = income - fuel - ymIn - commonExpense;
     var shares = { nastya: net * SHARE.nastya, natalia: net * SHARE.natalia };
     var keys = Object.keys(byFuelMo).sort();
     var rest = 0;
