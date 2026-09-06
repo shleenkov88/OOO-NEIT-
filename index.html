@@ -243,10 +243,24 @@
     .donut svg { display: block; }
     .donut path { cursor: pointer; transition: opacity 0.2s ease, filter 0.2s ease; }
     .donut path.hot { filter: brightness(1.15); }
-    .fuel-head { display: flex; align-items: center; gap: 10px; }
+    .fuel-head { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
     .fuel-head h2 { margin: 0; }
-    .gpn { display: block; flex-shrink: 0; width: 36px; height: 36px; }
-    .gpn-sm { width: 18px; height: 18px; }
+    .gpn-full {
+      height: 40px;
+      width: auto;
+      max-width: 200px;
+      background: #fff;
+      border-radius: 10px;
+      padding: 6px 10px;
+      box-sizing: content-box;
+    }
+    .gpn-sm {
+      height: 18px;
+      width: auto;
+      background: #fff;
+      border-radius: 4px;
+      padding: 2px 4px;
+    }
     .label.with-logo { display: flex; align-items: center; gap: 6px; }
     .tiny { font-size: 12px; color: var(--muted); }
     .foot { color: var(--subtle); font-size: 12px; line-height: 1.5; margin-top: 24px; }
@@ -320,7 +334,7 @@
   <div class="card"><div class="label">Пришло</div><div class="val" id="sIncome">0 ₽</div></div>
   <div class="card"><div class="label">К разделу</div><div class="val" id="sNet">0 ₽</div></div>
   <div class="card"><div class="label">Касса</div><div class="val" id="sCash">0 ₽</div></div>
-  <div class="card"><div class="label with-logo"><svg class="gpn gpn-sm" viewBox="0 0 48 48" aria-hidden="true"><rect width="48" height="48" rx="12" fill="#1177C1"/><path fill="#B4D2EE" d="M26 6c-1.5 7 3 11 3 17 0 4.5-3.2 7.5-7 7.5S15 27 15 21.5C15 15 21 9 26 6z"/><path fill="#fff" d="M24 20c-6 0-11 4.6-11 11s5 11 11 11 11-4.6 11-11h-7c0 2.7-1.8 4.5-4 4.5s-4-1.8-4-4.5 1.8-4.5 4-4.5v4h9V20H24z"/></svg>Топливо</div><div class="val" id="sCard">0 ₽</div></div>
+  <div class="card"><div class="label with-logo"><img class="gpn-sm" src="gazprom-neft-mark.png" alt="">Топливо</div><div class="val" id="sCard">0 ₽</div></div>
 </div>
 
 <div class="grid2">
@@ -344,15 +358,8 @@
 
 <section class="card">
   <div class="fuel-head">
-    <svg class="gpn" viewBox="0 0 48 48" role="img" aria-label="Газпромнефть">
-      <rect width="48" height="48" rx="12" fill="#1177C1"/>
-      <path fill="#B4D2EE" d="M26 6c-1.5 7 3 11 3 17 0 4.5-3.2 7.5-7 7.5S15 27 15 21.5C15 15 21 9 26 6z"/>
-      <path fill="#fff" d="M24 20c-6 0-11 4.6-11 11s5 11 11 11 11-4.6 11-11h-7c0 2.7-1.8 4.5-4 4.5s-4-1.8-4-4.5 1.8-4.5 4-4.5v4h9V20H24z"/>
-    </svg>
-    <div>
-      <h2>Топливо</h2>
-      <div class="tiny">Карта Газпромнефть</div>
-    </div>
+    <img class="gpn-full" src="gazprom-neft.png" alt="Газпромнефть">
+    <h2>Топливо</h2>
   </div>
   <div class="grid3" style="margin-top:12px">
     <div class="mini"><div class="label">Пополнено</div><div class="val" id="sFuelIn">0 ₽</div></div>
