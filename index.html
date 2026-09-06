@@ -5,6 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="theme-color" content="#09090b" />
   <title>ООО «Нейт»</title>
+  <link rel="icon" href="favicon.ico" sizes="any">
+  <link rel="icon" type="image/png" href="favicon-32.png" sizes="32x32">
+  <link rel="apple-touch-icon" href="apple-touch-icon.png">
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
   <style>
@@ -64,7 +67,15 @@
     h1 { font-size: 20px; font-weight: 700; letter-spacing: -0.4px; }
     h2 { font-size: 17px; font-weight: 600; letter-spacing: -0.3px; }
     .sub { color: var(--muted); font-size: 13px; margin-top: 2px; }
-    .top { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 20px; }
+    .brand { display: flex; align-items: center; gap: 12px; min-width: 0; }
+    .brand-logo {
+      width: 48px; height: 48px;
+      border-radius: 12px;
+      object-fit: cover;
+      background: #f7f5f0;
+      box-shadow: 0 0 0 1px var(--border);
+      flex-shrink: 0;
+    }
     .card, .box {
       background: var(--surface);
       backdrop-filter: var(--glass);
@@ -278,7 +289,8 @@
 </head>
 <body>
 <div id="gate" class="modal" style="display:none"><div class="box">
-  <p class="label">Наташа Тейковцева</p>
+  <img class="brand-logo" src="logo.png" width="48" height="48" alt="">
+  <p class="label" style="margin-top:10px">Наташа Тейковцева</p>
   <h1 style="font-size:22px;margin:6px 0 14px">Пароль Наташи</h1>
   <input id="pass" type="password" inputmode="numeric" autocomplete="off" placeholder="Пароль" />
   <p id="passErr" class="tiny bad" style="display:none;margin-top:8px">Неверный пароль</p>
@@ -289,9 +301,12 @@
 </div></div>
 
 <header class="top">
-  <div>
-    <h1>ООО «Нейт»</h1>
-    <div class="sub">Настя 70% · Наташа 30%</div>
+  <div class="brand">
+    <img class="brand-logo" src="logo.png" width="48" height="48" alt="ООО «Нейт»">
+    <div>
+      <h1>ООО «Нейт»</h1>
+      <div class="sub">Швейная фабрика · Настя 70% · Наташа 30%</div>
+    </div>
   </div>
   <div class="ops">
     <button class="chip" id="themeBtn" type="button">Светлая</button>
