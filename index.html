@@ -359,17 +359,17 @@
       border-radius: 16px;
     }
     @media (max-width: 480px) {
-      body { padding: 16px 12px calc(120px + env(safe-area-inset-bottom, 0px)); }
+      body { padding: 16px 12px calc(140px + env(safe-area-inset-bottom, 0px)); }
       .card { padding: 14px; }
       .val { font-size: 18px; }
       .mini .val { font-size: 16px; }
       .row { font-size: 12px; padding: 7px 0; }
       .row b { font-size: 12px; }
       .grid4, .grid2, .grid3 { gap: 8px; }
+      #marketForm, #fuelForm, #form { padding-bottom: 8px; }
       #marketForm .primary, #fuelForm .primary, #form .primary {
-        position: sticky;
-        bottom: calc(8px + env(safe-area-inset-bottom, 0px));
-        z-index: 6;
+        margin-bottom: 24px;
+        padding-right: 56px;
       }
     }
     @media (prefers-reduced-motion: reduce) {
@@ -1025,10 +1025,9 @@
     tx.push({ id: Date.now().toString(36) + Math.random().toString(36).slice(2, 7), date: fuelDate.value, amount: amount, type: fuelKind, comment: fuelComment.value.trim(), partner: fuelKind === "fuel" ? "natalia" : whoFuel, marketplace: null, purpose: null });
     fuelAmount.value = ""; fuelComment.value = ""; persist();
   };
-  marketForm.onsubmit = function (e) {
-    e.preventDefault();
+  function saveMarket() {
     var amount = money(marketAmount.value);
-    if (amount <= 0) { need(marketAmount); return; }
+    if (amount <= 0) { need(marketAmount); return false; }
     var whoBtn = document.querySelector("#marketForm [data-who].on");
     var placeBtn = document.querySelector("#placeOps [data-place].on");
     var whoNow = (whoBtn && whoBtn.getAttribute("data-who")) || who || "nastya";
@@ -1037,6 +1036,15 @@
     place = placeNow;
     tx.push({ id: Date.now().toString(36) + Math.random().toString(36).slice(2, 7), date: marketDate.value, amount: amount, type: "market", partner: whoNow, marketplace: placeNow, purpose: null, comment: marketComment.value.trim() });
     marketAmount.value = ""; marketComment.value = ""; persist();
+    return true;
+  }
+  marketForm.onsubmit = function (e) {
+    e.preventDefault();
+    saveMarket();
+  };
+  document.querySelector("#marketForm .primary").onclick = function (e) {
+    e.preventDefault();
+    saveMarket();
   };
   exportBtn.onclick = function () {
     var head = "Дата;Сумма;Тип;Кто;Площадка;На что;Комментарий";
