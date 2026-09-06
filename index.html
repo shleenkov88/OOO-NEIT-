@@ -272,6 +272,16 @@
     .warn { display: none; background: color-mix(in srgb, var(--bad) 12%, transparent); color: var(--bad); padding: 10px 12px; border-radius: 14px; margin-bottom: 12px; font-size: 13px; }
     .mini { background: var(--elevated); border-radius: 14px; padding: 12px; }
     .logo { display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: 10px; color: #fff; font-size: 10px; font-weight: 700; flex-shrink: 0; }
+    .logo-img { width: 32px; height: 32px; border-radius: 10px; object-fit: cover; flex-shrink: 0; background: #111; }
+    .ym-full {
+      height: 40px;
+      width: auto;
+      max-width: 200px;
+      background: #000;
+      border-radius: 10px;
+      padding: 4px 8px;
+      box-sizing: content-box;
+    }
     .place {
       display: flex;
       flex-direction: column;
@@ -405,7 +415,7 @@
   </div>
 </header>
 <div id="fbWarn" class="warn">Нет связи с облаком. Пишу в память телефона.</div>
-<p id="guestNote" class="note">Заправку и покупки можно записать сразу. Сколько денег пришло и сколько отдали на руки — это вносит только Наташа, через кнопку «Войти».</p>
+<p id="guestNote" class="note">Заправку, покупку на Ozon и прочие траты можно записать сразу. Приход, выдачу, топливо и депозит Я.Маркета вносит Наташа — кнопка «Войти».</p>
 
 <div class="grid4">
   <div class="card"><div class="label">Пришло</div><div class="val" id="sIncome">0 ₽</div></div>
@@ -463,8 +473,44 @@
     </div>
     <div><label>Комментарий</label><input id="fuelComment" placeholder="Газпромнефть" /></div>
     <button class="primary" type="submit" id="fuelSubmit">Записать заправку</button>
+    <p class="tiny">Положить на карту = выдача Наташе. Заправки снимают только с карты, прибыль ещё раз не режут.</p>
   </form>
   <ul id="fuelList"></ul>
+</section>
+
+<section class="card">
+  <div class="fuel-head">
+    <img class="ym-full" src="ym.png" alt="Яндекс Маркет">
+    <div>
+      <h2>Я.Маркет</h2>
+      <div class="tiny">депозит площадки</div>
+    </div>
+  </div>
+  <div class="grid3" style="margin-top:12px">
+    <div class="mini"><div class="label">Пополнено</div><div class="val" id="sYmIn">0 ₽</div></div>
+    <div class="mini"><div class="label">Списано</div><div class="val" id="sYmOut">0 ₽</div></div>
+    <div class="mini"><div class="label">Остаток</div><div class="val" id="sYmCard">0 ₽</div></div>
+  </div>
+  <form id="ymForm">
+    <div class="ops" id="ymOps">
+      <button type="button" class="op" data-ym="ym" id="ymTopupBtn">Пополнить депозит</button>
+      <button type="button" class="op on" data-ym="ym_spend">Покупка с депозита</button>
+    </div>
+    <div id="ymWhoWrap">
+      <div class="ops">
+        <button type="button" class="op on" data-ymfor="nastya">Купила Настя</button>
+        <button type="button" class="op" data-ymfor="natalia">Купила Наташа</button>
+      </div>
+    </div>
+    <div class="grid2">
+      <div><label>Сумма, ₽</label><input id="ymAmount" type="text" inputmode="numeric" pattern="[0-9]*" enterkeyhint="done" autocomplete="off" /></div>
+      <div><label>Дата</label><input id="ymDate" type="date" required /></div>
+    </div>
+    <div><label>Что купили</label><input id="ymComment" placeholder="Ткань, фурнитура" /></div>
+    <button class="primary" type="submit" id="ymSubmit">Записать покупку</button>
+    <p class="tiny">Пополнение — из общей кассы на двоих. Покупки снимают только депозит, с долей больше не списываются.</p>
+  </form>
+  <ul id="ymList"></ul>
 </section>
 
 <section class="card">
@@ -501,18 +547,36 @@
         <button type="button" class="op on" data-who="nastya">Купила Настя</button>
         <button type="button" class="op" data-who="natalia">Купила Наташа</button>
       </div>
-      <p class="tiny">Где купили</p>
+      <p class="tiny">Ozon — с доли той, кто купил. Я.Маркет пишите в блоке депозита выше.</p>
       <div class="ops" id="placeOps"></div>
       <div class="grid2">
         <div><label>Сумма, ₽</label><input id="marketAmount" type="text" inputmode="numeric" pattern="[0-9]*" enterkeyhint="done" autocomplete="off" /></div>
         <div><label>Дата</label><input id="marketDate" type="date" required /></div>
       </div>
-      <div><label>Что купили</label><input id="marketComment" placeholder="Пылесос, кабель" /></div>
+      <div><label>Что купили</label><input id="marketComment" placeholder="Ткань, нитки" /></div>
       <button class="primary" type="submit">Записать покупку</button>
     </form>
     <p class="tiny filter-chip" id="platFilterHint" style="display:none"></p>
     <ul id="marketList"></ul>
   </div>
+</section>
+
+<section class="card">
+  <h2>Потратили</h2>
+  <p class="tiny" style="margin-top:4px">Прочие расходы не с Ozon и не с депозита Я.Маркета. Снимается с доли той, кто потратил.</p>
+  <form id="spendForm">
+    <div class="ops">
+      <button type="button" class="op on" data-spend="nastya">Потратила Настя</button>
+      <button type="button" class="op" data-spend="natalia">Потратила Наташа</button>
+    </div>
+    <div class="grid2">
+      <div><label>Сумма, ₽</label><input id="spendAmount" type="text" inputmode="numeric" pattern="[0-9]*" enterkeyhint="done" autocomplete="off" /></div>
+      <div><label>Дата</label><input id="spendDate" type="date" required /></div>
+    </div>
+    <div><label>Где и что купили</label><input id="spendComment" placeholder="Магазин, такси, фурнитура" /></div>
+    <button class="primary" type="submit">Записать трату</button>
+  </form>
+  <ul id="spendList"></ul>
 </section>
 
 <div class="tabs">
@@ -524,7 +588,6 @@
   <form id="form">
     <div class="ops">
       <button type="button" class="op on" data-type="income">Деньги пришли</button>
-      <button type="button" class="op" data-type="expense">Потратили</button>
       <button type="button" class="op" data-type="salary">Выдали на руки</button>
     </div>
     <div class="grid2">
@@ -541,7 +604,7 @@
     <button class="primary" type="submit" id="cashSubmit">Записать приход</button>
   </form>
 </section>
-<p id="workGuest" class="note" style="display:none">Сюда пишет только Наташа. Покупки — выше, в «Площадки». Их можно писать без пароля.</p>
+<p id="workGuest" class="note" style="display:none">Сюда пишет только Наташа: приход и выдача на руки. Траты — в блоках выше.</p>
 
 <section id="panelLog" class="card" style="display:none">
   <input id="searchInput" type="search" placeholder="Поиск по истории (комментарий, сумма, дата)..." style="margin-bottom:10px;" />
@@ -556,7 +619,7 @@
   <p id="empty" class="tiny" style="padding:16px 0;display:none">Пока пусто</p>
 </section>
 
-<footer class="foot">Деньги делим так: Насте 70%, Наташе 30%. Если кто-то купил вещь — сумма снимается с её доли. На карту Газпромнефти кладёт Наташа, заправляются обе.</footer>
+<footer class="foot">Деньги делим: Насте 70%, Наташе 30%. Топливо на карту — это выдача Наташе. Депозит Я.Маркета — из общей кассы. Ozon и прочие траты снимаются с доли той, кто купил.</footer>
 
 <script>
 (function () {
@@ -567,25 +630,26 @@
   var SHARE = { nastya: 0.7, natalia: 0.3 };
   var NAMES = { nastya: "Настя", natalia: "Наташа" };
   var PLACES = {
-    wb: { name: "Wildberries", short: "WB", color: "#CB11AB" },
-    ozon: { name: "Ozon", short: "OZ", color: "#005BFF" },
-    vi: { name: "ВсеИнструменты", short: "VI", color: "#FF6900" },
-    ym: { name: "Яндекс Маркет", short: "YM", color: "#FFCC00" },
-    ali: { name: "AliExpress", short: "Ali", color: "#E62E04" },
-    avito: { name: "Авито", short: "Avito", color: "#00AAFF" },
-    other: { name: "Другое", short: "·", color: "#71717a" }
+    ozon: { name: "Ozon", short: "OZ", color: "#005BFF", img: "ozon.png" },
+    ym: { name: "Яндекс Маркет", short: "YM", color: "#FFCC00", img: "ym-mark.png" },
+    other: { name: "Прочее", short: "·", color: "#71717a" }
   };
   var PURP = { ads: "Реклама", commission: "Комиссия", goods: "Закупка", delivery: "Доставка", pack: "Упаковка", other: "Прочее" };
-  var LABELS = { income: "пришло", fuel: "на карту", fuel_spend: "заправка", expense: "потратили", market: "покупка", salary: "на руки", personal: "изъятие" };
+  var LABELS = { income: "пришло", fuel: "на карту", fuel_spend: "заправка", expense: "потратили", market: "покупка", salary: "на руки", personal: "изъятие", ym: "депозит Я.Маркет", ym_spend: "с Я.Маркета" };
   firebase.initializeApp({ apiKey: "AIzaSyCSME5fUFOS6R80-2-wEgOyAUyJx1M0a1A", authDomain: "neit-41882.firebaseapp.com", projectId: "neit-41882", storageBucket: "neit-41882.firebasestorage.app", messagingSenderId: "478613249008", appId: "1:478613249008:web:42f214670ccc00a4935b35", databaseURL: "https://neit-41882-default-rtdb.europe-west1.firebasedatabase.app/" });
   var ref = firebase.database().ref("transactions");
   var tx = [];
   var director = false;
-  var type = "income", fuelKind = "fuel_spend", who = "nastya", whoFuel = "nastya", place = "wb", partner = "nastya";
+  var type = "income", fuelKind = "fuel_spend", ymKind = "ym_spend", who = "nastya", whoFuel = "nastya", whoYm = "nastya", whoSpend = "nastya", place = "ozon", partner = "nastya";
   var platOpen = true;
   var platFilter = null;
 
-  function emptyPlace() { return { wb: 0, ozon: 0, vi: 0, ym: 0, ali: 0, avito: 0, other: 0 }; }
+  function emptyPlace() { return { ozon: 0, ym: 0, other: 0 }; }
+  function normPlace(id) {
+    if (id === "ozon" || id === "ym" || id === "other") return id;
+    if (!id) return "";
+    return "other";
+  }
   function polar(cx, cy, r, a) {
     var rad = (a - 90) * Math.PI / 180;
     return { x: cx + r * Math.cos(rad), y: cy + r * Math.sin(rad) };
@@ -731,15 +795,18 @@
     var bits = [LABELS[t.type] || t.type];
     var ow = ownerOf(t);
     if (ow) bits.push(NAMES[ow]);
-    if (t.marketplace && PLACES[t.marketplace]) bits.push(PLACES[t.marketplace].name);
+    if (t.marketplace && PLACES[normPlace(t.marketplace)]) bits.push(PLACES[normPlace(t.marketplace)].name);
     return bits.join(" · ");
   }
   function logo(id) {
     var p = PLACES[id];
+    if (!p) return "";
+    if (p.img) return '<img class="logo-img" src="' + p.img + '" alt="">';
     return '<span class="logo" style="background:' + p.color + '">' + esc(p.short.slice(0, 2)) + "</span>";
   }
   function metrics() {
     var income = 0, fuel = 0, fuelSpend = 0, fuelMonth = 0, fuelSpendMonth = 0, commonExpense = 0, market = 0;
+    var ymIn = 0, ymOut = 0;
     var paid = { nastya: 0, natalia: 0 };
     var personal = { nastya: 0, natalia: 0 };
     var byWho = { nastya: 0, natalia: 0 };
@@ -749,9 +816,11 @@
     var nowYm = thisYm();
     for (var i = 0; i < tx.length; i++) {
       var t = tx[i], a = money(t.amount);
+      var mp = normPlace(t.marketplace);
       if (t.type === "income") income += a;
       else if (t.type === "fuel") {
         fuel += a;
+        paid.natalia += a;
         var fmo = ymOf(t.date);
         if (!byFuelMo[fmo]) byFuelMo[fmo] = { inn: 0, out: 0 };
         byFuelMo[fmo].inn += a;
@@ -762,21 +831,37 @@
         if (!byFuelMo[smo]) byFuelMo[smo] = { inn: 0, out: 0 };
         byFuelMo[smo].out += a;
         if (smo === nowYm) fuelSpendMonth += a;
+      } else if (t.type === "ym") {
+        ymIn += a;
+      } else if (t.type === "ym_spend" || (t.type === "market" && mp === "ym")) {
+        ymOut += a;
+        market += a;
+        var yw = ownerOf(t);
+        if (yw) {
+          byWho[yw] += a;
+          byPlaceWho[yw].ym += a;
+        }
+        byPlace.ym += a;
       } else if (t.type === "expense") {
         var ew = ownerOf(t);
-        if (ew) personal[ew] += a; else commonExpense += a;
+        if (ew) {
+          personal[ew] += a;
+          byWho[ew] += a;
+          byPlaceWho[ew].other += a;
+        } else commonExpense += a;
+        byPlace.other += a;
       } else if (t.type === "market") {
         market += a;
         var mw = ownerOf(t);
         if (mw) {
           personal[mw] += a;
           byWho[mw] += a;
-          if (t.marketplace && byPlaceWho[mw][t.marketplace] != null) byPlaceWho[mw][t.marketplace] += a;
+          if (byPlaceWho[mw][mp] != null) byPlaceWho[mw][mp] += a;
         } else commonExpense += a;
-        if (byPlace[t.marketplace] != null) byPlace[t.marketplace] += a;
+        if (byPlace[mp] != null) byPlace[mp] += a;
       } else if ((t.type === "salary" || t.type === "personal") && paid[t.partner] != null) paid[t.partner] += a;
     }
-    var net = income - fuel - commonExpense;
+    var net = income - ymIn - commonExpense;
     var shares = { nastya: net * SHARE.nastya, natalia: net * SHARE.natalia };
     var keys = Object.keys(byFuelMo).sort();
     var rest = 0;
@@ -789,7 +874,8 @@
     fuelMonths.reverse();
     return {
       income: income, fuel: fuel, fuelSpend: fuelSpend, fuelMonth: fuelMonth, fuelSpendMonth: fuelSpendMonth,
-      card: fuel - fuelSpend, market: market, net: net, fuelMonths: fuelMonths, nowYm: nowYm,
+      card: fuel - fuelSpend, ymIn: ymIn, ymOut: ymOut, ymCard: ymIn - ymOut,
+      market: market, net: net, fuelMonths: fuelMonths, nowYm: nowYm,
       personal: personal, paid: paid, shares: shares, byWho: byWho, byPlace: byPlace, byPlaceWho: byPlaceWho,
       bal: { nastya: shares.nastya - paid.nastya - personal.nastya, natalia: shares.natalia - paid.natalia - personal.natalia },
       cash: net - paid.nastya - paid.natalia - personal.nastya - personal.natalia
@@ -803,12 +889,17 @@
     resetBtn.style.display = director ? "inline-flex" : "none";
     restoreBtn.style.display = director ? "inline-flex" : "none";
     fuelTopupBtn.style.display = director ? "" : "none";
+    ymTopupBtn.style.display = director ? "" : "none";
     if (!director) {
       fuelKind = "fuel_spend";
+      ymKind = "ym_spend";
       document.querySelectorAll("#fuelOps [data-fuel]").forEach(function (b) { b.classList.toggle("on", b.getAttribute("data-fuel") === "fuel_spend"); });
+      document.querySelectorAll("#ymOps [data-ym]").forEach(function (b) { b.classList.toggle("on", b.getAttribute("data-ym") === "ym_spend"); });
     }
     fuelWhoWrap.style.display = fuelKind === "fuel_spend" ? "block" : "none";
     fuelSubmit.textContent = fuelKind === "fuel" ? "Положить на карту" : "Записать заправку";
+    ymWhoWrap.style.display = ymKind === "ym_spend" ? "block" : "none";
+    ymSubmit.textContent = ymKind === "ym" ? "Пополнить депозит" : "Записать покупку";
     form.style.display = director ? "grid" : "none";
     workGuest.style.display = director ? "none" : "block";
     marketForm.style.display = platOpen ? "grid" : "none";
@@ -826,6 +917,10 @@
     sFuelOut.textContent = rub(m.fuelSpendMonth);
     sFuelCard.textContent = rub(m.card);
     sFuelCard.className = "val " + (m.card < 0 ? "bad" : "ok");
+    sYmIn.textContent = rub(m.ymIn);
+    sYmOut.textContent = rub(m.ymOut);
+    sYmCard.textContent = rub(m.ymCard);
+    sYmCard.className = "val " + (m.ymCard < 0 ? "bad" : "ok");
     fuelMonthLabel.textContent = monthName(m.nowYm);
     shareNastya.textContent = rub(m.shares.nastya);
     shareNatalia.textContent = rub(m.shares.natalia);
@@ -851,7 +946,7 @@
   }
 
   function rowHtml(t) {
-    var sign = (t.type === "income" || t.type === "fuel") ? "+" : "−";
+    var sign = (t.type === "income" || t.type === "fuel" || t.type === "ym") ? "+" : "−";
     var del = director ? '<button class="del" type="button" data-del="' + esc(t.id) + '">Удалить</button>' : "";
     return '<li><div><div>' + sign + rub(t.amount) + '</div><div class="tiny">' + esc(t.date) + " · " + esc(title(t)) + "</div>" + (t.comment ? '<div class="tiny">' + esc(t.comment) + "</div>" : "") + "</div>" + del + "</li>";
   }
@@ -878,7 +973,8 @@
   }
   function matchesSearch(t, q) {
     if (!q) return true;
-    var placeName = (t.marketplace && PLACES[t.marketplace]) ? PLACES[t.marketplace].name : "";
+    var pk = t.marketplace ? normPlace(t.marketplace) : "";
+    var placeName = (pk && PLACES[pk]) ? PLACES[pk].name : "";
     var hay = [
       String(t.comment || ""),
       String(t.amount || ""),
@@ -915,8 +1011,10 @@
       empty.textContent = q ? "Ничего не найдено по вашему запросу" : "Пока пусто";
     }
     fill(marketList, tx.filter(function (t) {
-      return t.type === "market" && ownerOf(t) === who && (!platFilter || t.marketplace === platFilter);
+      return t.type === "market" && normPlace(t.marketplace) !== "ym" && ownerOf(t) === who && (!platFilter || normPlace(t.marketplace) === platFilter);
     }).sort(function (a, b) { return String(b.date || "").localeCompare(String(a.date || "")); }));
+    fill(spendList, tx.filter(function (t) { return t.type === "expense"; }).sort(function (a, b) { return String(b.date || "").localeCompare(String(a.date || "")); }).slice(0, 8));
+    fill(ymList, tx.filter(function (t) { return t.type === "ym" || t.type === "ym_spend" || (t.type === "market" && normPlace(t.marketplace) === "ym"); }).sort(function (a, b) { return String(b.date || "").localeCompare(String(a.date || "")); }).slice(0, 8));
     var now = thisYm();
     var fuelNow = tx.filter(function (t) {
       return (t.type === "fuel" || t.type === "fuel_spend") && ymOf(t.date) === now;
@@ -942,7 +1040,7 @@
     document.querySelector('meta[name="theme-color"]').setAttribute("content", t === "dark" ? "#09090b" : "#f4f4f6");
   }
 
-  placeOps.innerHTML = Object.keys(PLACES).map(function (k, i) {
+  placeOps.innerHTML = Object.keys(PLACES).filter(function (k) { return k === "ozon"; }).map(function (k, i) {
     return '<button type="button" class="op' + (i === 0 ? " on" : "") + '" data-place="' + k + '">' + logo(k) + " " + esc(PLACES[k].name) + "</button>";
   }).join("");
 
@@ -987,18 +1085,25 @@
 
   group("#panelWork [data-type]", "data-type", function (v) {
     type = v;
-    partnerWrap.style.display = (v === "salary" || v === "expense") ? "block" : "none";
-    cashSubmit.textContent = v === "income" ? "Записать приход" : v === "salary" ? "Выдать" : "Записать трату";
-    comment.placeholder = v === "income" ? "Откуда деньги" : "Что купили";
-    pNastya.textContent = v === "salary" ? "Насте" : "Потратила Настя";
-    pNatalia.textContent = v === "salary" ? "Наташе" : "Потратила Наташа";
+    partnerWrap.style.display = v === "salary" ? "block" : "none";
+    cashSubmit.textContent = v === "income" ? "Записать приход" : "Выдать";
+    comment.placeholder = v === "income" ? "Откуда деньги" : "Комментарий";
+    pNastya.textContent = "Насте";
+    pNatalia.textContent = "Наташе";
   });
   group("#fuelForm [data-fuel]", "data-fuel", function (v) {
     fuelKind = v;
     fuelWhoWrap.style.display = v === "fuel_spend" ? "block" : "none";
     fuelSubmit.textContent = v === "fuel" ? "Положить на карту" : "Записать заправку";
   });
+  group("#ymForm [data-ym]", "data-ym", function (v) {
+    ymKind = v;
+    ymWhoWrap.style.display = v === "ym_spend" ? "block" : "none";
+    ymSubmit.textContent = v === "ym" ? "Пополнить депозит" : "Записать покупку";
+  });
   group("#fuelWhoWrap [data-fuelfor]", "data-fuelfor", function (v) { whoFuel = v; });
+  group("#ymWhoWrap [data-ymfor]", "data-ymfor", function (v) { whoYm = v; });
+  group("#spendForm [data-spend]", "data-spend", function (v) { whoSpend = v; });
   group("#marketForm [data-who]", "data-who", function (v) { setWho(v); });
   group("#placeOps [data-place]", "data-place", function (v) { place = v; });
   group("#partnerWrap [data-partner]", "data-partner", function (v) { partner = v; });
@@ -1017,7 +1122,7 @@
     if (!director) return;
     var amount = money(document.getElementById("amount").value);
     if (amount <= 0) { need(document.getElementById("amount")); return; }
-    tx.push({ id: Date.now().toString(36) + Math.random().toString(36).slice(2, 7), date: date.value, amount: amount, type: type, comment: comment.value.trim(), partner: (type === "salary" || type === "expense") ? partner : null, marketplace: null, purpose: null });
+    tx.push({ id: Date.now().toString(36) + Math.random().toString(36).slice(2, 7), date: date.value, amount: amount, type: type, comment: comment.value.trim(), partner: type === "salary" ? partner : null, marketplace: null, purpose: null });
     document.getElementById("amount").value = ""; comment.value = ""; persist();
   };
   fuelForm.onsubmit = function (e) {
@@ -1028,16 +1133,31 @@
     tx.push({ id: Date.now().toString(36) + Math.random().toString(36).slice(2, 7), date: fuelDate.value, amount: amount, type: fuelKind, comment: fuelComment.value.trim(), partner: fuelKind === "fuel" ? "natalia" : whoFuel, marketplace: null, purpose: null });
     fuelAmount.value = ""; fuelComment.value = ""; persist();
   };
+  ymForm.onsubmit = function (e) {
+    e.preventDefault();
+    if (ymKind === "ym" && !director) return;
+    var amount = money(ymAmount.value);
+    if (amount <= 0) { need(ymAmount); return; }
+    tx.push({ id: Date.now().toString(36) + Math.random().toString(36).slice(2, 7), date: ymDate.value, amount: amount, type: ymKind, comment: ymComment.value.trim(), partner: ymKind === "ym" ? "natalia" : whoYm, marketplace: "ym", purpose: null });
+    ymAmount.value = ""; ymComment.value = ""; persist();
+  };
+  spendForm.onsubmit = function (e) {
+    e.preventDefault();
+    var amount = money(spendAmount.value);
+    if (amount <= 0) { need(spendAmount); return; }
+    tx.push({ id: Date.now().toString(36) + Math.random().toString(36).slice(2, 7), date: spendDate.value, amount: amount, type: "expense", comment: spendComment.value.trim(), partner: whoSpend, marketplace: "other", purpose: null });
+    spendAmount.value = ""; spendComment.value = ""; persist();
+  };
   function saveMarket() {
     var amount = money(marketAmount.value);
     if (amount <= 0) { need(marketAmount); return false; }
     var whoBtn = document.querySelector("#marketForm [data-who].on");
     var placeBtn = document.querySelector("#placeOps [data-place].on");
     var whoNow = (whoBtn && whoBtn.getAttribute("data-who")) || who || "nastya";
-    var placeNow = (placeBtn && placeBtn.getAttribute("data-place")) || place || "wb";
+    var placeNow = "ozon";
     who = whoNow;
     place = placeNow;
-    tx.push({ id: Date.now().toString(36) + Math.random().toString(36).slice(2, 7), date: marketDate.value, amount: amount, type: "market", partner: whoNow, marketplace: placeNow, purpose: null, comment: marketComment.value.trim() });
+    tx.push({ id: Date.now().toString(36) + Math.random().toString(36).slice(2, 7), date: marketDate.value, amount: amount, type: "market", partner: whoNow, marketplace: "ozon", purpose: null, comment: marketComment.value.trim() });
     marketAmount.value = ""; marketComment.value = ""; persist();
     return true;
   }
@@ -1051,7 +1171,7 @@
   };
   exportBtn.onclick = function () {
     var head = "Дата;Сумма;Тип;Кто;Площадка;На что;Комментарий";
-    var rows = tx.map(function (t) { return [t.date, t.amount, LABELS[t.type] || t.type, NAMES[t.partner] || "", (PLACES[t.marketplace] || {}).name || "", PURP[t.purpose] || "", '"' + String(t.comment || "").replace(/"/g, '""') + '"'].join(";"); });
+    var rows = tx.map(function (t) { return [t.date, t.amount, LABELS[t.type] || t.type, NAMES[t.partner] || "", (PLACES[normPlace(t.marketplace)] || {}).name || "", PURP[t.purpose] || "", '"' + String(t.comment || "").replace(/"/g, '""') + '"'].join(";"); });
     var a = document.createElement("a");
     a.href = URL.createObjectURL(new Blob(["\uFEFF" + [head].concat(rows).join("\n")], { type: "text/csv;charset=utf-8;" }));
     a.download = "neit-kassa.csv";
@@ -1108,6 +1228,8 @@
   document.getElementById("date").valueAsDate = new Date();
   fuelDate.valueAsDate = new Date();
   marketDate.valueAsDate = new Date();
+  ymDate.valueAsDate = new Date();
+  spendDate.valueAsDate = new Date();
 
   try {
     var th = localStorage.getItem(THEME);
