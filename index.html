@@ -246,7 +246,11 @@
       align-items: center;
       text-align: center;
       gap: 2px;
+      cursor: pointer;
+      opacity: 0.42;
+      transition: opacity 0.2s ease, box-shadow 0.2s ease;
     }
+    .donut-card.on { opacity: 1; box-shadow: 0 0 0 1px var(--fg); }
     .donut-card .val { font-size: 16px; margin-top: 2px; }
     .donut svg { width: 112px; height: 112px; }
     .sum {
@@ -354,12 +358,12 @@
   </button>
   <div id="platBody" style="margin-top:14px">
     <div class="donut-row">
-      <div class="donut-card">
+      <div class="donut-card on" data-who="nastya">
         <div class="donut" id="donutNastya"></div>
         <div class="tiny">Настя</div>
         <div class="val" id="totalNastyaM">0 ₽</div>
       </div>
-      <div class="donut-card">
+      <div class="donut-card" data-who="natalia">
         <div class="donut" id="donutNatalia"></div>
         <div class="tiny">Наташа</div>
         <div class="val" id="totalNataliaM">0 ₽</div>
@@ -499,12 +503,12 @@
     });
     if (platFilter && PLACES[platFilter]) {
       platFilterHint.style.display = "block";
-      platFilterHint.innerHTML = "Только " + esc(PLACES[platFilter].name) + ' · <button type="button" class="del" id="platFilterClear">сбросить</button>';
+      platFilterHint.innerHTML = "Покупки " + (who === "nastya" ? "Насти" : "Наташи") + " · " + esc(PLACES[platFilter].name) + ' · <button type="button" class="del" id="platFilterClear">сбросить площадку</button>';
       var clr = document.getElementById("platFilterClear");
       if (clr) clr.onclick = function () { platFilter = null; render(); };
     } else {
-      platFilterHint.style.display = "none";
-      platFilterHint.textContent = "";
+      platFilterHint.style.display = "block";
+      platFilterHint.textContent = "Покупки " + (who === "nastya" ? "Насти" : "Наташи");
     }
   }
   function bindPlat() {
@@ -532,6 +536,32 @@
       el.onclick = function () { pick(id); };
     });
     setPlatActive(null);
+    document.querySelectorAll(".donut-card").forEach(function (el) {
+      el.onclick = function () { setWho(el.getAttribute("data-who")); };
+    });
+  }
+
+  function setWho(id) {
+    if (id !== "nastya" && id !== "natalia") return;
+    who = id;
+    document.querySelectorAll("#marketForm [data-who]").forEach(function (b) {
+      b.classList.toggle("on", b.getAttribute("data-who") === who);
+    });
+    applyWhoView();
+  }
+  function applyWhoView() {
+    var m = metrics();
+    document.querySelectorAll(".donut-card").forEach(function (el) {
+      el.classList.toggle("on", el.getAttribute("data-who") === who);
+    });
+    var mine = m.byPlaceWho[who] || emptyPlace();
+    var total = m.byWho[who] || 0;
+    placeGrid.innerHTML = Object.keys(PLACES).filter(function (k) { return mine[k] > 0; }).map(function (k) {
+      var pct = total > 0 ? Math.round((mine[k] / total) * 100) : 0;
+      return '<button type="button" class="place" data-place="' + k + '"><div class="place-top">' + logo(k) + '<div class="place-meta"><div class="tiny">' + esc(PLACES[k].name) + " · " + pct + '%</div><div class="val" style="font-size:14px">' + rub(mine[k]) + "</div></div></div><div class=\"place-bar\"><span style=\"width:" + pct + "%;background:" + PLACES[k].color + '"></span></div></button>';
+    }).join("");
+    bindPlat();
+    renderLists();
   }
 
   function rub(n) { return new Intl.NumberFormat("ru-RU", { style: "currency", currency: "RUB", maximumFractionDigits: 0 }).format(Math.round(n || 0)); }
@@ -639,12 +669,7 @@
     totalNataliaM.textContent = rub(m.byWho.natalia);
     drawDonut(donutNastya, m.byPlaceWho.nastya, m.byWho.nastya);
     drawDonut(donutNatalia, m.byPlaceWho.natalia, m.byWho.natalia);
-    placeGrid.innerHTML = Object.keys(PLACES).filter(function (k) { return m.byPlace[k] > 0; }).map(function (k) {
-      var pct = m.market > 0 ? Math.round((m.byPlace[k] / m.market) * 100) : 0;
-      return '<button type="button" class="place" data-place="' + k + '"><div class="place-top">' + logo(k) + '<div class="place-meta"><div class="tiny">' + esc(PLACES[k].name) + " · " + pct + '%</div><div class="val" style="font-size:14px">' + rub(m.byPlace[k]) + "</div></div></div><div class=\"place-bar\"><span style=\"width:" + pct + "%;background:" + PLACES[k].color + '"></span></div></button>';
-    }).join("");
-    bindPlat();
-    renderLists();
+    applyWhoView();
     setRoleUI();
   }
 
@@ -690,7 +715,7 @@
     fill(list, all);
     empty.style.display = all.length ? "none" : "block";
     fill(marketList, tx.filter(function (t) {
-      return t.type === "market" && (!platFilter || t.marketplace === platFilter);
+      return t.type === "market" && ownerOf(t) === who && (!platFilter || t.marketplace === platFilter);
     }).sort(function (a, b) { return String(b.date || "").localeCompare(String(a.date || "")); }));
     fill(fuelList, tx.filter(function (t) { return t.type === "fuel" || t.type === "fuel_spend"; }).sort(function (a, b) { return String(b.date || "").localeCompare(String(a.date || "")); }).slice(0, 4));
   }
@@ -764,7 +789,7 @@
     fuelSubmit.textContent = v === "fuel" ? "Положить на карту" : "Записать заправку";
   });
   group("#fuelWhoWrap [data-fuelfor]", "data-fuelfor", function (v) { whoFuel = v; });
-  group("#marketForm [data-who]", "data-who", function (v) { who = v; });
+  group("#marketForm [data-who]", "data-who", function (v) { setWho(v); });
   group("#placeOps [data-place]", "data-place", function (v) { place = v; });
   group("#partnerWrap [data-partner]", "data-partner", function (v) { partner = v; });
   document.querySelectorAll(".tabs button").forEach(function (b) {
