@@ -715,13 +715,19 @@
       el.classList.toggle("hot", !!sel && k === sel);
     });
     if (platFilter && CATS[platFilter]) {
-      platFilterHint.style.display = "block";
-      platFilterHint.innerHTML = (who === "nastya" ? "Настя" : "Наташа") + " · " + esc(CATS[platFilter].name) + ' · <button type="button" class="del" id="platFilterClear">сбросить</button>';
-      var clr = document.getElementById("platFilterClear");
-      if (clr) clr.onclick = function () { platFilter = null; render(); };
+      var label = (who === "nastya" ? "Настя" : "Наташа") + " · " + CATS[platFilter].name;
+      if (director) {
+        platFilterHint.style.display = "block";
+        platFilterHint.innerHTML = esc(label) + ' · <button type="button" class="del" id="platFilterClear">сбросить</button>';
+        var clr = document.getElementById("platFilterClear");
+        if (clr) clr.onclick = function () { platFilter = null; render(); };
+      } else {
+        platFilterHint.style.display = "none";
+        platFilterHint.textContent = "";
+      }
     } else {
-      platFilterHint.style.display = "block";
-      platFilterHint.textContent = "Траты " + (who === "nastya" ? "Насти" : "Наташи");
+      platFilterHint.style.display = "none";
+      platFilterHint.textContent = "";
     }
   }
   function bindPlat() {
