@@ -529,6 +529,7 @@
     var val = snap.val();
     if (Array.isArray(val)) tx = val;
     else if (val && typeof val === "object") tx = Object.values(val);
+    else tx = [];
     render();
   }, function () { fbWarn.style.display = "block"; render(); });
   render();
