@@ -418,6 +418,7 @@
 <p id="workGuest" class="note" style="display:none">Поступления вносит Наташа. Покупки пишут обе — блок «Площадки».</p>
 
 <section id="panelLog" class="card" style="display:none">
+  <input id="searchInput" type="search" placeholder="Поиск по истории (комментарий, сумма, дата)..." style="margin-bottom:10px;" />
   <div style="display:flex;gap:8px;margin-bottom:10px">
     <select id="monthFilter"><option value="all">Все месяцы</option></select>
     <button class="chip" id="exportBtn" type="button">CSV</button>
@@ -699,9 +700,27 @@
     list.innerHTML = rows.map(rowHtml).join("");
     bindDel(list);
   }
+  function matchesSearch(t, q) {
+    if (!q) return true;
+    var placeName = (t.marketplace && PLACES[t.marketplace]) ? PLACES[t.marketplace].name : "";
+    var hay = [
+      String(t.comment || ""),
+      String(t.amount || ""),
+      rub(t.amount),
+      String(t.date || ""),
+      placeName,
+      LABELS[t.type] || t.type || "",
+      (t.partner && NAMES[t.partner]) ? NAMES[t.partner] : "",
+      title(t)
+    ].join(" ").toLowerCase();
+    return hay.indexOf(q) !== -1;
+  }
   function renderLists() {
     var month = monthFilter.value;
-    var all = tx.filter(function (t) { return month === "all" || (t.date || "").indexOf(month) === 0; });
+    var q = String(searchInput.value || "").trim().toLowerCase();
+    var all = tx.filter(function (t) {
+      return (month === "all" || (t.date || "").indexOf(month) === 0) && matchesSearch(t, q);
+    });
     all.sort(function (a, b) { return String(b.date || "").localeCompare(String(a.date || "")); });
     var months = [];
     for (var i = 0; i < tx.length; i++) {
@@ -713,7 +732,12 @@
       return '<option value="' + esc(mo) + '"' + (mo === month ? " selected" : "") + ">" + esc(mo) + "</option>";
     }).join("");
     fill(list, all);
-    empty.style.display = all.length ? "none" : "block";
+    if (all.length) {
+      empty.style.display = "none";
+    } else {
+      empty.style.display = "block";
+      empty.textContent = q ? "Ничего не найдено по вашему запросу" : "Пока пусто";
+    }
     fill(marketList, tx.filter(function (t) {
       return t.type === "market" && ownerOf(t) === who && (!platFilter || t.marketplace === platFilter);
     }).sort(function (a, b) { return String(b.date || "").localeCompare(String(a.date || "")); }));
@@ -857,6 +881,7 @@
     render();
   };
   monthFilter.onchange = renderLists;
+  searchInput.oninput = renderLists;
   document.getElementById("date").valueAsDate = new Date();
   fuelDate.valueAsDate = new Date();
   marketDate.valueAsDate = new Date();
