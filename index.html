@@ -45,7 +45,7 @@
       --ink: #18181b;
       --shadow: 0 10px 28px -12px rgba(0, 0, 0, 0.16);
     }
-    * { box-sizing: border-box; margin: 0; padding: 0; }
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
     html, body {
       background: var(--bg);
       color: var(--fg);
@@ -106,8 +106,18 @@
       border-radius: 14px;
       transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
     }
-    button, input, select, textarea, a {
+    button, input, select, textarea, a, .donut-card, .place, .donut, svg, path {
       -webkit-tap-highlight-color: transparent;
+    }
+    .donut-card, .place, .donut, .donut svg, .donut path {
+      outline: none;
+      -webkit-user-select: none;
+      user-select: none;
+    }
+    .place:focus, .place:active, .donut-card:focus, .donut-card:active,
+    .donut path:focus, .donut path:active {
+      outline: none;
+      box-shadow: none;
     }
     button {
       cursor: pointer;
