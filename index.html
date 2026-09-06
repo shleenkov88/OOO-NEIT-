@@ -45,6 +45,7 @@
     .row { display:flex; justify-content:space-between; font-size:13px; padding:6px 0; border-bottom:1px solid var(--border); gap:8px; }
     .row:last-child { border-bottom:0; }
     .ok { color:var(--ok); } .bad { color:var(--bad); }
+    button.bad { color:var(--bad); border-color:color-mix(in srgb, var(--bad) 45%, var(--border)); background:transparent; }
     form { display:grid; gap:10px; margin-top:12px; }
     label { font-size:12px; color:var(--muted); font-weight:600; display:block; margin-bottom:6px; }
     input,select,textarea { width:100%; padding:12px 14px; min-height:44px; }
@@ -201,6 +202,7 @@
   <div style="display:flex;gap:8px;margin-bottom:10px">
     <select id="monthFilter"><option value="all">Все месяцы</option></select>
     <button class="chip" id="exportBtn" type="button">CSV</button>
+    <button class="chip bad" id="resetBtn" type="button" style="display:none">Сброс</button>
   </div>
   <ul id="list"></ul>
   <p id="empty" class="tiny" style="padding:16px 0;display:none">Пока пусто</p>
@@ -290,6 +292,7 @@
     guestNote.style.display = director ? "none" : "block";
     roleBtn.textContent = director ? "Выйти" : "Войти";
     roleBtn.className = "chip";
+    resetBtn.style.display = director ? "" : "none";
     fuelTopupBtn.style.display = director ? "" : "none";
     if (!director) {
       fuelKind = "fuel_spend";
@@ -334,14 +337,22 @@
 
   function rowHtml(t) {
     var sign = (t.type === "income" || t.type === "fuel") ? "+" : "−";
-    var del = director ? '<button class="del" type="button" data-id="' + esc(t.id) + '">Удалить</button>' : "";
+    var del = director ? '<button class="del" type="button" data-del="' + esc(t.id) + '">Удалить</button>' : "";
     return '<li><div><div>' + sign + rub(t.amount) + '</div><div class="tiny">' + esc(t.date) + " · " + esc(title(t)) + "</div>" + (t.comment ? '<div class="tiny">' + esc(t.comment) + "</div>" : "") + "</div>" + del + "</li>";
   }
   function bindDel(root) {
-    var dels = root.querySelectorAll(".del");
+    var dels = root.querySelectorAll("[data-del]");
     for (var j = 0; j < dels.length; j++) dels[j].onclick = function () {
-      if (!director || !confirm("Удалить запись?")) return;
-      var id = this.getAttribute("data-id");
+      if (!director) return;
+      var id = this.getAttribute("data-del");
+      var rec = null;
+      for (var i = 0; i < tx.length; i++) if (tx[i].id === id) { rec = tx[i]; break; }
+      if (!rec) return;
+      var msg = "Удалить " + rub(rec.amount);
+      if (rec.comment) msg += " — «" + rec.comment + "»";
+      else msg += " без комментария";
+      msg += "?";
+      if (!confirm(msg)) return;
       tx = tx.filter(function (t) { return t.id !== id; });
       persist();
     };
@@ -478,6 +489,26 @@
     a.href = URL.createObjectURL(new Blob(["\uFEFF" + [head].concat(rows).join("\n")], { type: "text/csv;charset=utf-8;" }));
     a.download = "neit-kassa.csv";
     a.click();
+  };
+  function backupFileName() {
+    var d = new Date();
+    var m = String(d.getMonth() + 1).padStart(2, "0");
+    var day = String(d.getDate()).padStart(2, "0");
+    return "neit-kassa-backup-" + d.getFullYear() + "-" + m + "-" + day + ".json";
+  }
+  resetBtn.onclick = function () {
+    if (!director) return;
+    if (!confirm("Сбросить кассу? Сначала скачается архив, потом история очистится.")) return;
+    var blob = new Blob([JSON.stringify(tx, null, 2)], { type: "application/json" });
+    var a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = backupFileName();
+    a.click();
+    setTimeout(function () { URL.revokeObjectURL(a.href); }, 1500);
+    tx = [];
+    try { localStorage.setItem(KEY, "[]"); } catch (e) {}
+    try { ref.remove(); } catch (e) { fbWarn.style.display = "block"; }
+    render();
   };
   monthFilter.onchange = renderLists;
   document.getElementById("date").valueAsDate = new Date();
