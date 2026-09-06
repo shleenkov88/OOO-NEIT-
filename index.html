@@ -273,6 +273,13 @@
     .mini { background: var(--elevated); border-radius: 14px; padding: 12px; }
     .logo { display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: 10px; color: #fff; font-size: 10px; font-weight: 700; flex-shrink: 0; }
     .logo-img { width: 32px; height: 32px; border-radius: 10px; object-fit: cover; flex-shrink: 0; background: #111; }
+    .block-logo {
+      width: 48px; height: 48px;
+      border-radius: 12px;
+      object-fit: cover;
+      flex-shrink: 0;
+      background: #111;
+    }
     .ym-full {
       height: 40px;
       width: auto;
@@ -443,7 +450,36 @@
   </section>
 </div>
 
-<section class="card">
+<section class="card" id="secCharts">
+  <h2>Расходы</h2>
+  <p class="tiny" style="margin-top:4px;margin-bottom:12px">Ozon, Я.Маркет, топливо и прочее — кто сколько потратил</p>
+  <div class="donut-row">
+    <div class="donut-card on" data-who="nastya">
+      <div class="donut" id="donutNastya">
+        <svg viewBox="0 0 140 140" width="112" height="112" aria-hidden="true">
+          <circle class="donut-track" cx="70" cy="70" r="46" fill="none" stroke-width="16"/>
+          <g class="slices"></g>
+        </svg>
+      </div>
+      <div class="tiny">Настя</div>
+      <div class="val" id="totalNastyaM">0 ₽</div>
+    </div>
+    <div class="donut-card" data-who="natalia">
+      <div class="donut" id="donutNatalia">
+        <svg viewBox="0 0 140 140" width="112" height="112" aria-hidden="true">
+          <circle class="donut-track" cx="70" cy="70" r="46" fill="none" stroke-width="16"/>
+          <g class="slices"></g>
+        </svg>
+      </div>
+      <div class="tiny">Наташа</div>
+      <div class="val" id="totalNataliaM">0 ₽</div>
+    </div>
+  </div>
+  <div class="grid2" id="placeGrid"></div>
+  <p class="tiny filter-chip" id="platFilterHint" style="display:none"></p>
+</section>
+
+<section class="card" id="secFuel">
   <div class="fuel-head">
     <img class="gpn-full" src="gazprom-neft.png" alt="Газпромнефть">
     <div>
@@ -478,7 +514,7 @@
   <ul id="fuelList"></ul>
 </section>
 
-<section class="card">
+<section class="card" id="secYm">
   <div class="fuel-head">
     <img class="ym-full" src="ym.png" alt="Яндекс Маркет">
     <div>
@@ -513,57 +549,37 @@
   <ul id="ymList"></ul>
 </section>
 
-<section class="card">
-  <button class="sum" type="button" id="platToggle">
-    <span>Площадки<br><span class="tiny" id="platSum">0 ₽</span></span>
-    <span class="tiny" id="platToggleLabel">Свернуть</span>
-  </button>
-  <div id="platBody" style="margin-top:14px">
-    <div class="donut-row">
-      <div class="donut-card on" data-who="nastya">
-        <div class="donut" id="donutNastya">
-          <svg viewBox="0 0 140 140" width="112" height="112" aria-hidden="true">
-            <circle class="donut-track" cx="70" cy="70" r="46" fill="none" stroke-width="16"/>
-            <g class="slices"></g>
-          </svg>
-        </div>
-        <div class="tiny">Настя</div>
-        <div class="val" id="totalNastyaM">0 ₽</div>
-      </div>
-      <div class="donut-card" data-who="natalia">
-        <div class="donut" id="donutNatalia">
-          <svg viewBox="0 0 140 140" width="112" height="112" aria-hidden="true">
-            <circle class="donut-track" cx="70" cy="70" r="46" fill="none" stroke-width="16"/>
-            <g class="slices"></g>
-          </svg>
-        </div>
-        <div class="tiny">Наташа</div>
-        <div class="val" id="totalNataliaM">0 ₽</div>
-      </div>
+<section class="card" id="secOzon">
+  <div class="fuel-head">
+    <img class="block-logo" src="ozon.png" alt="Ozon">
+    <div>
+      <h2>Ozon</h2>
+      <div class="tiny">с доли той, кто купил</div>
     </div>
-    <div class="grid2" id="placeGrid"></div>
-    <form id="marketForm">
-      <div class="ops">
-        <button type="button" class="op on" data-who="nastya">Купила Настя</button>
-        <button type="button" class="op" data-who="natalia">Купила Наташа</button>
-      </div>
-      <p class="tiny">Ozon — с доли той, кто купил. Я.Маркет пишите в блоке депозита выше.</p>
-      <div class="ops" id="placeOps"></div>
-      <div class="grid2">
-        <div><label>Сумма, ₽</label><input id="marketAmount" type="text" inputmode="numeric" pattern="[0-9]*" enterkeyhint="done" autocomplete="off" /></div>
-        <div><label>Дата</label><input id="marketDate" type="date" required /></div>
-      </div>
-      <div><label>Что купили</label><input id="marketComment" placeholder="Ткань, нитки" /></div>
-      <button class="primary" type="submit">Записать покупку</button>
-    </form>
-    <p class="tiny filter-chip" id="platFilterHint" style="display:none"></p>
-    <ul id="marketList"></ul>
   </div>
+  <form id="marketForm">
+    <div class="ops">
+      <button type="button" class="op on" data-who="nastya">Купила Настя</button>
+      <button type="button" class="op" data-who="natalia">Купила Наташа</button>
+    </div>
+    <div class="grid2">
+      <div><label>Сумма, ₽</label><input id="marketAmount" type="text" inputmode="numeric" pattern="[0-9]*" enterkeyhint="done" autocomplete="off" /></div>
+      <div><label>Дата</label><input id="marketDate" type="date" required /></div>
+    </div>
+    <div><label>Что купили</label><input id="marketComment" placeholder="Ткань, нитки" /></div>
+    <button class="primary" type="submit">Записать покупку</button>
+  </form>
+  <ul id="marketList"></ul>
 </section>
 
-<section class="card">
-  <h2>Потратили</h2>
-  <p class="tiny" style="margin-top:4px">Прочие расходы не с Ozon и не с депозита Я.Маркета. Снимается с доли той, кто потратил.</p>
+<section class="card" id="secOther">
+  <div class="fuel-head">
+    <img class="block-logo" src="other.png" alt="Прочее">
+    <div>
+      <h2>Прочее</h2>
+      <div class="tiny">с доли той, кто потратил</div>
+    </div>
+  </div>
   <form id="spendForm">
     <div class="ops">
       <button type="button" class="op on" data-spend="nastya">Потратила Настя</button>
@@ -629,11 +645,13 @@
   var THEME = "neit-theme";
   var SHARE = { nastya: 0.7, natalia: 0.3 };
   var NAMES = { nastya: "Настя", natalia: "Наташа" };
-  var PLACES = {
-    ozon: { name: "Ozon", short: "OZ", color: "#005BFF", img: "ozon.png" },
-    ym: { name: "Яндекс Маркет", short: "YM", color: "#FFCC00", img: "ym-mark.png" },
-    other: { name: "Прочее", short: "·", color: "#71717a" }
+  var CATS = {
+    ozon: { name: "Ozon", short: "OZ", color: "#005BFF", img: "ozon.png", sec: "secOzon" },
+    ym: { name: "Яндекс Маркет", short: "YM", color: "#FFCC00", img: "ym-mark.png", sec: "secYm" },
+    fuel: { name: "Топливо", short: "ГП", color: "#1177C1", img: "gazprom-neft-mark.png", sec: "secFuel" },
+    other: { name: "Прочее", short: "Пр", color: "#9B1B4A", img: "other.png", sec: "secOther" }
   };
+  var PLACES = { ozon: CATS.ozon, ym: CATS.ym, other: CATS.other };
   var PURP = { ads: "Реклама", commission: "Комиссия", goods: "Закупка", delivery: "Доставка", pack: "Упаковка", other: "Прочее" };
   var LABELS = { income: "пришло", fuel: "на карту", fuel_spend: "заправка", expense: "потратили", market: "покупка", salary: "на руки", personal: "изъятие", ym: "депозит Я.Маркет", ym_spend: "с Я.Маркета" };
   firebase.initializeApp({ apiKey: "AIzaSyCSME5fUFOS6R80-2-wEgOyAUyJx1M0a1A", authDomain: "neit-41882.firebaseapp.com", projectId: "neit-41882", storageBucket: "neit-41882.firebasestorage.app", messagingSenderId: "478613249008", appId: "1:478613249008:web:42f214670ccc00a4935b35", databaseURL: "https://neit-41882-default-rtdb.europe-west1.firebasedatabase.app/" });
@@ -641,10 +659,9 @@
   var tx = [];
   var director = false;
   var type = "income", fuelKind = "fuel_spend", ymKind = "ym_spend", who = "nastya", whoFuel = "nastya", whoYm = "nastya", whoSpend = "nastya", place = "ozon", partner = "nastya";
-  var platOpen = true;
   var platFilter = null;
 
-  function emptyPlace() { return { ozon: 0, ym: 0, other: 0 }; }
+  function emptyPlace() { return { ozon: 0, ym: 0, fuel: 0, other: 0 }; }
   function normPlace(id) {
     if (id === "ozon" || id === "ym" || id === "other") return id;
     if (!id) return "";
@@ -673,14 +690,14 @@
     var html = "";
     if (total > 0) {
       var angle = 0;
-      Object.keys(PLACES).forEach(function (k) {
+      Object.keys(CATS).forEach(function (k) {
         var v = byPlace[k] || 0;
         if (v <= 0) return;
         var sweep = (v / total) * 360;
         var a0 = angle;
         var a1 = angle + sweep;
         angle = a1;
-        html += '<path data-place="' + k + '" d="' + donutPath(70, 70, 34, 58, a0, a1) + '" fill="' + PLACES[k].color + '" fill-rule="evenodd" stroke="rgba(9,9,11,.35)" stroke-width="1.2"/>';
+        html += '<path data-place="' + k + '" d="' + donutPath(70, 70, 34, 58, a0, a1) + '" fill="' + CATS[k].color + '" fill-rule="evenodd" stroke="rgba(9,9,11,.35)" stroke-width="1.2"/>';
       });
     }
     g.innerHTML = html;
@@ -697,24 +714,22 @@
       el.classList.toggle("on", k === platFilter);
       el.classList.toggle("hot", !!sel && k === sel);
     });
-    if (platFilter && PLACES[platFilter]) {
+    if (platFilter && CATS[platFilter]) {
       platFilterHint.style.display = "block";
-      platFilterHint.innerHTML = "Покупки " + (who === "nastya" ? "Насти" : "Наташи") + " · " + esc(PLACES[platFilter].name) + ' · <button type="button" class="del" id="platFilterClear">сбросить площадку</button>';
+      platFilterHint.innerHTML = (who === "nastya" ? "Настя" : "Наташа") + " · " + esc(CATS[platFilter].name) + ' · <button type="button" class="del" id="platFilterClear">сбросить</button>';
       var clr = document.getElementById("platFilterClear");
       if (clr) clr.onclick = function () { platFilter = null; render(); };
     } else {
       platFilterHint.style.display = "block";
-      platFilterHint.textContent = "Покупки " + (who === "nastya" ? "Насти" : "Наташи");
+      platFilterHint.textContent = "Траты " + (who === "nastya" ? "Насти" : "Наташи");
     }
   }
   function bindPlat() {
     function pick(id) {
       platFilter = platFilter === id ? null : id;
-      if (platFilter) {
-        place = platFilter;
-        document.querySelectorAll("#placeOps [data-place]").forEach(function (b) {
-          b.classList.toggle("on", b.getAttribute("data-place") === platFilter);
-        });
+      if (platFilter && CATS[platFilter] && CATS[platFilter].sec) {
+        var box = document.getElementById(CATS[platFilter].sec);
+        if (box) box.scrollIntoView({ behavior: "smooth", block: "start" });
       }
       renderLists();
       setPlatActive(platFilter);
@@ -752,9 +767,9 @@
     });
     var mine = m.byPlaceWho[who] || emptyPlace();
     var total = m.byWho[who] || 0;
-    placeGrid.innerHTML = Object.keys(PLACES).filter(function (k) { return k !== "other" || mine[k] > 0; }).map(function (k) {
+    placeGrid.innerHTML = Object.keys(CATS).map(function (k) {
       var pct = total > 0 ? Math.round((mine[k] / total) * 100) : 0;
-      return '<button type="button" class="place" data-place="' + k + '"><div class="place-top">' + logo(k) + '<div class="place-meta"><div class="tiny">' + esc(PLACES[k].name) + " · " + pct + '%</div><div class="val" style="font-size:14px">' + rub(mine[k]) + "</div></div></div><div class=\"place-bar\"><span style=\"width:" + pct + "%;background:" + PLACES[k].color + '"></span></div></button>';
+      return '<button type="button" class="place" data-place="' + k + '"><div class="place-top">' + logo(k) + '<div class="place-meta"><div class="tiny">' + esc(CATS[k].name) + " · " + pct + '%</div><div class="val" style="font-size:14px">' + rub(mine[k]) + "</div></div></div><div class=\"place-bar\"><span style=\"width:" + pct + "%;background:" + CATS[k].color + '"></span></div></button>';
     }).join("");
     bindPlat();
     renderLists();
@@ -799,10 +814,10 @@
     return bits.join(" · ");
   }
   function logo(id) {
-    var p = PLACES[id];
+    var p = CATS[id] || PLACES[id];
     if (!p) return "";
     if (p.img) return '<img class="logo-img" src="' + p.img + '" alt="">';
-    return '<span class="logo" style="background:' + p.color + '">' + esc(p.short.slice(0, 2)) + "</span>";
+    return '<span class="logo" style="background:' + p.color + '">' + esc((p.short || "?").slice(0, 2)) + "</span>";
   }
   function metrics() {
     var income = 0, fuel = 0, fuelSpend = 0, fuelMonth = 0, fuelSpendMonth = 0, commonExpense = 0, market = 0;
@@ -831,6 +846,12 @@
         if (!byFuelMo[smo]) byFuelMo[smo] = { inn: 0, out: 0 };
         byFuelMo[smo].out += a;
         if (smo === nowYm) fuelSpendMonth += a;
+        var fw = ownerOf(t);
+        if (fw) {
+          byWho[fw] += a;
+          byPlaceWho[fw].fuel += a;
+        }
+        byPlace.fuel += a;
       } else if (t.type === "ym") {
         ymIn += a;
       } else if (t.type === "ym_spend" || (t.type === "market" && mp === "ym")) {
@@ -902,7 +923,6 @@
     ymSubmit.textContent = ymKind === "ym" ? "Пополнить депозит" : "Записать покупку";
     form.style.display = director ? "grid" : "none";
     workGuest.style.display = director ? "none" : "block";
-    marketForm.style.display = platOpen ? "grid" : "none";
     panelWork.style.display = document.querySelector('.tabs button.on').getAttribute("data-tab") === "work" && director ? "block" : "none";
     if (document.querySelector('.tabs button.on').getAttribute("data-tab") === "work" && !director) workGuest.style.display = "block";
   }
@@ -934,9 +954,6 @@
     balNatalia.className = m.bal.natalia >= 0 ? "ok" : "bad";
     pBarNastya.style.width = (m.shares.nastya > 0 ? Math.min(100, Math.max(0, ((m.paid.nastya + m.personal.nastya) / m.shares.nastya) * 100)) : 0) + "%";
     pBarNatalia.style.width = (m.shares.natalia > 0 ? Math.min(100, Math.max(0, ((m.paid.natalia + m.personal.natalia) / m.shares.natalia) * 100)) : 0) + "%";
-    platSum.textContent = rub(m.market);
-    platToggleLabel.textContent = platOpen ? "Свернуть" : "Открыть";
-    platBody.style.display = platOpen ? "block" : "none";
     totalNastyaM.textContent = rub(m.byWho.nastya);
     totalNataliaM.textContent = rub(m.byWho.natalia);
     drawDonut(donutNastya, m.byPlaceWho.nastya, m.byWho.nastya);
@@ -1040,10 +1057,6 @@
     document.querySelector('meta[name="theme-color"]').setAttribute("content", t === "dark" ? "#09090b" : "#f4f4f6");
   }
 
-  placeOps.innerHTML = Object.keys(PLACES).filter(function (k) { return k === "ozon"; }).map(function (k, i) {
-    return '<button type="button" class="op' + (i === 0 ? " on" : "") + '" data-place="' + k + '">' + logo(k) + " " + esc(PLACES[k].name) + "</button>";
-  }).join("");
-
   function group(sel, attr, setter) {
     var btns = document.querySelectorAll(sel);
     for (var i = 0; i < btns.length; i++) btns[i].onclick = function () {
@@ -1076,12 +1089,6 @@
     } else passErr.style.display = "block";
   };
   pass.onkeydown = function (e) { if (e.key === "Enter") enter.click(); };
-  platToggle.onclick = function () {
-    platOpen = !platOpen;
-    platBody.style.display = platOpen ? "block" : "none";
-    platToggleLabel.textContent = platOpen ? "Свернуть" : "Открыть";
-    render();
-  };
 
   group("#panelWork [data-type]", "data-type", function (v) {
     type = v;
@@ -1105,7 +1112,6 @@
   group("#ymWhoWrap [data-ymfor]", "data-ymfor", function (v) { whoYm = v; });
   group("#spendForm [data-spend]", "data-spend", function (v) { whoSpend = v; });
   group("#marketForm [data-who]", "data-who", function (v) { setWho(v); });
-  group("#placeOps [data-place]", "data-place", function (v) { place = v; });
   group("#partnerWrap [data-partner]", "data-partner", function (v) { partner = v; });
   document.querySelectorAll(".tabs button").forEach(function (b) {
     b.onclick = function () {
@@ -1152,7 +1158,6 @@
     var amount = money(marketAmount.value);
     if (amount <= 0) { need(marketAmount); return false; }
     var whoBtn = document.querySelector("#marketForm [data-who].on");
-    var placeBtn = document.querySelector("#placeOps [data-place].on");
     var whoNow = (whoBtn && whoBtn.getAttribute("data-who")) || who || "nastya";
     var placeNow = "ozon";
     who = whoNow;
