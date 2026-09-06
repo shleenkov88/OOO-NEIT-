@@ -68,6 +68,7 @@
     .row:last-child { border-bottom:0; }
     .ok { color:var(--ok); } .bad { color:var(--bad); }
     button.bad { color:var(--bad); border-color:color-mix(in srgb, var(--bad) 45%, var(--border)); background:transparent; }
+    #resetBtn { align-items:center; }
     form { display:grid; gap:10px; margin-top:12px; }
     label { font-size:12px; color:var(--muted); font-weight:600; display:block; margin-bottom:6px; }
     input,select,textarea { width:100%; padding:12px 14px; min-height:44px; }
@@ -322,7 +323,7 @@
     guestNote.style.display = director ? "none" : "block";
     roleBtn.textContent = director ? "Выйти" : "Войти";
     roleBtn.className = "chip";
-    resetBtn.style.display = director ? "" : "none";
+    resetBtn.style.display = director ? "inline-flex" : "none";
     fuelTopupBtn.style.display = director ? "" : "none";
     if (!director) {
       fuelKind = "fuel_spend";
@@ -357,8 +358,8 @@
     balNatalia.textContent = rub(m.bal.natalia);
     balNastya.className = m.bal.nastya >= 0 ? "ok" : "bad";
     balNatalia.className = m.bal.natalia >= 0 ? "ok" : "bad";
-    pBarNastya.style.width = (m.shares.nastya > 0 ? Math.min(100, (m.paid.nastya / m.shares.nastya) * 100) : 0) + "%";
-    pBarNatalia.style.width = (m.shares.natalia > 0 ? Math.min(100, (m.paid.natalia / m.shares.natalia) * 100) : 0) + "%";
+    pBarNastya.style.width = (m.shares.nastya > 0 ? Math.min(100, Math.max(0, ((m.paid.nastya + m.personal.nastya) / m.shares.nastya) * 100)) : 0) + "%";
+    pBarNatalia.style.width = (m.shares.natalia > 0 ? Math.min(100, Math.max(0, ((m.paid.natalia + m.personal.natalia) / m.shares.natalia) * 100)) : 0) + "%";
     platSum.textContent = rub(m.market) + (platOpen ? " · свернуть" : " · открыть");
     placeGrid.innerHTML = Object.keys(PLACES).filter(function (k) { return k !== "other"; }).map(function (k) {
       return '<div class="place">' + logo(k) + '<div><div class="tiny">' + esc(PLACES[k].name) + '</div><div class="val" style="font-size:14px">' + rub(m.byPlace[k]) + "</div></div></div>";
@@ -414,7 +415,7 @@
 
   function persist() {
     try { localStorage.setItem(KEY, JSON.stringify(tx)); } catch (e) {}
-    try { ref.set(tx); } catch (e) { fbWarn.style.display = "block"; }
+    try { ref.set(Array.from(tx)); } catch (e) { fbWarn.style.display = "block"; }
     render();
   }
 
