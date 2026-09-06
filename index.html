@@ -731,9 +731,9 @@
     }
   }
   function bindPlat() {
-    function pick(id) {
+    function pick(id, scroll) {
       platFilter = platFilter === id ? null : id;
-      if (platFilter && CATS[platFilter] && CATS[platFilter].sec) {
+      if (scroll && platFilter && CATS[platFilter] && CATS[platFilter].sec) {
         var box = document.getElementById(CATS[platFilter].sec);
         if (box) box.scrollIntoView({ behavior: "smooth", block: "start" });
       }
@@ -743,16 +743,16 @@
     document.querySelectorAll(".donut [data-place]").forEach(function (el) {
       var id = el.getAttribute("data-place");
       el.onmouseenter = function () { setPlatActive(id); };
-      el.onmouseleave = function () { setPlatActive(null); };
-      el.onclick = function (e) { e.stopPropagation(); pick(id); };
+      el.onmouseleave = function () { setPlatActive(platFilter); };
+      el.onclick = function (e) { e.stopPropagation(); pick(id, true); };
     });
     placeGrid.querySelectorAll(".place").forEach(function (el) {
       var id = el.getAttribute("data-place");
       el.onmouseenter = function () { setPlatActive(id); };
-      el.onmouseleave = function () { setPlatActive(null); };
-      el.onclick = function () { pick(id); };
+      el.onmouseleave = function () { setPlatActive(platFilter); };
+      el.onclick = function () { pick(id, false); };
     });
-    setPlatActive(null);
+    setPlatActive(platFilter);
     document.querySelectorAll(".donut-card").forEach(function (el) {
       el.onclick = function () { setWho(el.getAttribute("data-who")); };
     });
